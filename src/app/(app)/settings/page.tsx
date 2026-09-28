@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui';
-import { GeneralSettingsForm, InstrumentsForm, MistakeTagForm, SessionsForm } from '@/components/settings-forms';
+import { ChecklistForm, GeneralSettingsForm, InstrumentsForm, MistakeTagForm, SessionsForm } from '@/components/settings-forms';
 import { deleteMistakeTag, deleteSession } from '@/lib/actions/settings';
 import { unhideAllDays } from '@/lib/actions/journal';
 import { getHiddenDayCount, getInstruments, getMistakeTags, getScope, getSessionDefs, getSettings } from '@/lib/queries';
@@ -38,6 +38,10 @@ export default async function SettingsPage() {
             </form>
           ))}
         </div>
+      </Card>
+
+      <Card title="Pre-trade checklist">
+        <ChecklistForm config={config} />
       </Card>
 
       <Card title="Mistake tags">

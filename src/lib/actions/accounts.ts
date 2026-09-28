@@ -6,8 +6,17 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { accounts, dayJournals, imports, ledgerEntries, screenshots, sessionDefs, trades } from '@/lib/db/schema';
+import { DEFAULT_RISK_PRESETS } from '@/lib/defaults';
 import { ACCOUNT_COOKIE } from '@/lib/queries';
 import { bool, num, recomputeAccount, str, strList, type FormState } from '@/lib/actions/shared';
+
+function parseRiskPresets(raw: string | null): number[] {
+  const values = (raw ?? '')
+    .split(/[^0-9.]+/)
+    .map((part) => Number(part))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  return values.length ? values : [...DEFAULT_RISK_PRESETS];
+}
 
 export async function selectAccount(formData: FormData) {
   const value = String(formData.get('accountId') ?? 'all');
@@ -44,6 +53,7 @@ async function accountValuesFromForm(formData: FormData) {
     minTradingDays: type === 'PROP' ? num(formData.get('minTradingDays')) : null,
     maxTradesPerSession: num(formData.get('maxTradesPerSession')) ?? 3,
     riskPerTrade: num(formData.get('riskPerTrade')) ?? 300,
+    riskPresets: parseRiskPresets(str(formData.get('riskPresets'))),
     activeSessions: chosenSessions.length ? chosenSessions : defs.map((d) => d.key),
     entryWindows,
     notes: str(formData.get('notes')),

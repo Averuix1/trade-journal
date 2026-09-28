@@ -40,6 +40,15 @@ export default async function ImportPage() {
               buy/sell prices are used to work out whether each trade was long or short.
             </p>
           </div>
+          <div>
+            <div className="mb-1 font-medium text-[#cdefe2]">Google Sheets journal</div>
+            <p>
+              Export the trade log (one row per filled slot). Date, session, slot, instrument, direction, risk and
+              result are read. The sheet&rsquo;s outcome and R columns are ignored and R is recalculated. Day notes,
+              the rules-followed answer, the reason and the chart link land on the day. Undoing the batch removes the
+              trades and leaves those day notes in place.
+            </p>
+          </div>
         </div>
       </Card>
 

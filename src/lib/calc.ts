@@ -48,6 +48,12 @@ export function autoR(
   return round2(netPnl / risk);
 }
 
+/** R from a dollar risk when the trade has no prices. Null when risk wasn't recorded. */
+export function rFromRisk(netPnl: number, plannedRisk: number | null | undefined): number | null {
+  if (plannedRisk == null || plannedRisk <= 0) return null;
+  return round2(netPnl / plannedRisk);
+}
+
 export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
@@ -78,7 +84,7 @@ export type Classified = {
   inSystem: boolean;
 };
 
-type ClassifiableTrade = Pick<Trade, 'id' | 'openedAt' | 'brokenRuleIds' | 'mistakeTags'>;
+type ClassifiableTrade = Pick<Trade, 'id' | 'openedAt' | 'brokenRuleIds' | 'mistakeTags' | 'timeKnown'>;
 
 /**
  * Assigns each trade of a trading day its session, slot (T1..Tn / EXTRA) and rule breaks.
@@ -109,7 +115,8 @@ export function classifyDay(
       if (index >= cap) breaks.push('DUMP');
       const since = minutesSinceOpen(minuteOfDay(trade.openedAt, NY_TZ), session.startMinute);
       const window = account.entryWindows?.[session.key] ?? session.entryWindowMins;
-      if (window > 0 && since > window) breaks.push('OUTSIDE');
+      // Placeholder times sit at the session open so they are not judged against the entry window.
+      if (trade.timeKnown !== false && window > 0 && since > window) breaks.push('OUTSIDE');
     } else {
       const index = counts.get('__outside') ?? 0;
       counts.set('__outside', index + 1);
@@ -127,6 +134,7 @@ export function classifyDay(
       inSystem: breaks.length === 0,
     });
   }
+
   return result;
 }
 

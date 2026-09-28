@@ -4,7 +4,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { accounts, instruments, screenshots, settings, trades } from '@/lib/db/schema';
-import { autoFees, autoPnl, autoR, round2 } from '@/lib/calc';
+import { autoFees, autoPnl, autoR, rFromRisk, round2 } from '@/lib/calc';
 import { tradingDay, zonedInputToUtc } from '@/lib/time';
 import { getSettings } from '@/lib/queries';
 import { saveScreenshot } from '@/lib/blob';
@@ -16,10 +16,13 @@ async function buildTradeValues(formData: FormData) {
   if (!accountId) throw new Error('Pick an account.');
   const symbol = (str(formData.get('symbol')) ?? 'NQ').toUpperCase();
   const [instrument] = await db.select().from(instruments).where(eq(instruments.symbol, symbol));
-  const pointValue = instrument?.pointValue ?? 1;
+  const [account] = await db.select().from(accounts).where(eq(accounts.id, accountId));
+  if (!account) throw new Error('Pick an account.');
+  const pointValue = instrument?.pointValue ?? null;
 
   const side = (str(formData.get('side')) ?? 'LONG') as 'LONG' | 'SHORT';
-  const contracts = num(formData.get('contracts')) ?? 1;
+  const contracts = num(formData.get('contracts'));
+  const plannedRisk = num(formData.get('plannedRisk'));
   const entryPrice = num(formData.get('entryPrice'));
   const stopPrice = num(formData.get('stopPrice'));
   const exitPrice = num(formData.get('exitPrice'));
@@ -31,16 +34,19 @@ async function buildTradeValues(formData: FormData) {
   const closedAt = closedInput ? zonedInputToUtc(closedInput, config.timezone) : null;
 
   const feesOverridden = bool(formData.get('feesOverridden'));
+  const canPrice = pointValue != null && contracts != null;
   const fees = feesOverridden
     ? (num(formData.get('fees')) ?? 0)
-    : autoFees(contracts, instrument?.commissionPerContract ?? 0);
+    : canPrice
+      ? autoFees(contracts, instrument?.commissionPerContract ?? 0)
+      : 0;
 
   const pnlOverridden = bool(formData.get('pnlOverridden'));
-  const computedPnl = autoPnl(side, entryPrice, exitPrice, contracts, pointValue, fees);
+  const computedPnl = canPrice ? autoPnl(side, entryPrice, exitPrice, contracts, pointValue, fees) : null;
   const pnl = pnlOverridden ? (num(formData.get('pnl')) ?? 0) : (computedPnl ?? num(formData.get('pnl')) ?? 0);
 
-  const manualR = num(formData.get('rMultiple'));
-  const rMultiple = autoR(side, entryPrice, stopPrice, contracts, pointValue, pnl) ?? manualR;
+  const priceR = canPrice ? autoR(side, entryPrice, stopPrice, contracts, pointValue, pnl) : null;
+  const rMultiple = priceR ?? rFromRisk(pnl, plannedRisk ?? account.riskPerTrade);
 
   return {
     accountId,
@@ -50,6 +56,8 @@ async function buildTradeValues(formData: FormData) {
     symbol,
     side,
     contracts,
+    plannedRisk,
+    timeKnown: true,
     entryPrice,
     stopPrice,
     exitPrice,
@@ -146,15 +154,24 @@ export async function reapplyCommissions(): Promise<FormState> {
   for (const row of rows) {
     const instrument = bySymbol.get(row.symbol.toUpperCase());
     if (!instrument) continue;
+    if (row.contracts == null || instrument.pointValue == null) {
+      const nextR = rFromRisk(row.pnl, row.plannedRisk);
+      if (nextR != null && nextR !== row.rMultiple) {
+        await db.update(trades).set({ rMultiple: nextR }).where(eq(trades.id, row.id));
+        updated += 1;
+      }
+      continue;
+    }
     const fees = autoFees(row.contracts, instrument.commissionPerContract);
     if (Math.abs(fees - row.fees) < 0.005) continue;
     const pnl = row.pnlOverridden
       ? row.pnl
       : (autoPnl(row.side, row.entryPrice, row.exitPrice, row.contracts, instrument.pointValue, fees) ?? row.pnl);
-    await db
-      .update(trades)
-      .set({ fees, pnl, rMultiple: autoR(row.side, row.entryPrice, row.stopPrice, row.contracts, instrument.pointValue, pnl) ?? row.rMultiple })
-      .where(eq(trades.id, row.id));
+    const rMultiple =
+      autoR(row.side, row.entryPrice, row.stopPrice, row.contracts, instrument.pointValue, pnl) ??
+      rFromRisk(pnl, row.plannedRisk) ??
+      row.rMultiple;
+    await db.update(trades).set({ fees, pnl, rMultiple }).where(eq(trades.id, row.id));
     updated += 1;
   }
   revalidatePath('/', 'layout');

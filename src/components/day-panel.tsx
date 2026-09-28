@@ -21,6 +21,10 @@ export type DayPanelData = {
   sessions: SessionDef[];
   timezone: string;
   closeHref: string;
+  mistakeTags: string[];
+  activeSessionKeys: string[];
+  checklistItems: string[];
+  checklistSkipIfNo: number;
 };
 
 export function DayPanel({ data }: { data: DayPanelData }) {
@@ -125,6 +129,22 @@ export function DayPanel({ data }: { data: DayPanelData }) {
           )}
         </div>
 
+        {(data.journal?.screenshotLinks?.length ?? 0) > 0 && (
+          <div>
+            <div className="card-title mb-2">Chart links</div>
+            <ul className="space-y-1 text-sm">
+              {data.journal!.screenshotLinks.map((link) => (
+                <li key={link.url}>
+                  <a href={link.url} target="_blank" rel="noreferrer" className="text-mint-300 hover:underline">
+                    {link.url}
+                  </a>
+                  {link.comment && <span className="ml-2 text-dim">{link.comment}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div>
           <div className="card-title mb-2">Screenshots</div>
           {data.screenshots.length > 0 && (
@@ -154,7 +174,16 @@ export function DayPanel({ data }: { data: DayPanelData }) {
 
         <div>
           <div className="card-title mb-2">Day journal</div>
-          <DayJournalForm accountId={data.accountId} date={data.date} journal={data.journal} />
+          <DayJournalForm
+            accountId={data.accountId}
+            date={data.date}
+            journal={data.journal}
+            mistakeTags={data.mistakeTags}
+            sessions={data.sessions}
+            activeSessionKeys={data.activeSessionKeys}
+            checklistItems={data.checklistItems}
+            checklistSkipIfNo={data.checklistSkipIfNo}
+          />
         </div>
       </div>
     </aside>

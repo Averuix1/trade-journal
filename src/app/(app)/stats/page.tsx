@@ -3,6 +3,7 @@ import { BarChart, Gauge, LineChart, SplitBar } from '@/components/charts';
 import { BreakdownTable } from '@/components/breakdown-table';
 import { NoAccounts } from '@/components/no-accounts';
 import {
+  getJournals,
   getMistakeTags,
   getPlaybooks,
   getScope,
@@ -12,14 +13,20 @@ import {
 } from '@/lib/queries';
 import {
   breakdown,
+  checklistVerdict,
   computeDayStats,
   computeStats,
   dailyEquityCurve,
+  dayProfitFactor,
   groupByDay,
   maxDrawdown,
+  processSlice,
+  ruleBreakDaysByWeekday,
   streaks,
+  tradeStreaks,
   triggerRates,
   weekdayBreakdown,
+  type ProcessSlice,
 } from '@/lib/stats';
 import { fmtHold, fmtMoney, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
 import { minuteOfDay, NY_TZ } from '@/lib/time';
@@ -30,6 +37,37 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function one(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+
+function ProcessTable({ rows, empty }: { rows: ProcessSlice[]; empty: string }) {
+  if (!rows.length) return <p className="text-sm text-dim">{empty}</p>;
+  return (
+    <table className="tabular text-sm">
+      <thead>
+        <tr>
+          <th className="py-1.5"> </th>
+          <th className="text-right">Days</th>
+          <th className="text-right">P&L</th>
+          <th className="text-right">R</th>
+          <th className="text-right">Day win %</th>
+        </tr>
+      </thead>
+      <tbody className="divide-rows">
+        {rows.map((row) => (
+          <tr key={row.label}>
+            <td className="py-1.5">{row.label}</td>
+            <td className="text-right">{row.days}</td>
+            <td className="text-right">
+              <MoneyText value={row.pnl} />
+            </td>
+            <td className="text-right text-dim">{fmtR(row.r)}</td>
+            <td className="text-right">{fmtPct(row.winRate)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }
 
 export default async function StatsPage({ searchParams }: { searchParams: SearchParams }) {
@@ -69,7 +107,90 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
   const dayStats = computeDayStats(days);
   const curve = dailyEquityCurve(days, 0);
   const dd = maxDrawdown(curve);
-  const streak = streaks(days);
+  const dayStreak = streaks(days);
+  const tradeStreak = tradeStreaks(trades, config.beBandR);
+  const dayPf = dayProfitFactor(days);
+  const journals = await getJournals(scope.accountIds, from, to);
+  type ProcessDay = {
+    date: string;
+    pnl: number;
+    r: number;
+    rulesFollowed: boolean | null;
+    reason: string | null;
+    mood: number | null;
+    sleptWell: boolean | null;
+    grade: string | null;
+    checklist: 'passed' | 'failed' | 'blank';
+  };
+  const processDays = new Map<string, ProcessDay>();
+  for (const trade of trades) {
+    const key = `${trade.accountId}|${trade.tradeDate}`;
+    const row = processDays.get(key) ?? {
+      date: trade.tradeDate,
+      pnl: 0,
+      r: 0,
+      rulesFollowed: null,
+      reason: null,
+      mood: null,
+      sleptWell: null,
+      grade: null,
+      checklist: 'blank' as const,
+    };
+    row.pnl += trade.pnl;
+    row.r += trade.rMultiple ?? 0;
+    processDays.set(key, row);
+  }
+  for (const journal of journals) {
+    const key = `${journal.accountId}|${journal.date}`;
+    const row = processDays.get(key) ?? {
+      date: journal.date,
+      pnl: 0,
+      r: 0,
+      rulesFollowed: null,
+      reason: null,
+      mood: null,
+      sleptWell: null,
+      grade: null,
+      checklist: 'blank' as const,
+    };
+    row.rulesFollowed = journal.rulesFollowed;
+    row.reason = journal.ruleBreakReason;
+    row.mood = journal.mood;
+    row.sleptWell = journal.sleptWell;
+    row.grade = journal.grade;
+    row.checklist = checklistVerdict(journal.checklist, config.checklistSkipIfNo);
+    processDays.set(key, row);
+  }
+  const processList = [...processDays.values()];
+  const followedSlice = processSlice('Rules followed', processList.filter((day) => day.rulesFollowed === true));
+  const brokenSlice = processSlice('Rules broken', processList.filter((day) => day.rulesFollowed === false));
+  const reasonMap = new Map<string, ProcessDay[]>();
+  for (const day of processList) {
+    if (!day.reason) continue;
+    const list = reasonMap.get(day.reason) ?? [];
+    list.push(day);
+    reasonMap.set(day.reason, list);
+  }
+  const reasonRows = [...reasonMap.entries()]
+    .map(([label, list]) => processSlice(label, list))
+    .sort((a, b) => a.pnl - b.pnl);
+  const moodRows = [1, 2, 3, 4, 5]
+    .map((mood) => processSlice(String(mood), processList.filter((day) => day.mood === mood)))
+    .filter((row) => row.days > 0);
+  const sleepRows = [
+    processSlice('Slept well', processList.filter((day) => day.sleptWell === true)),
+    processSlice('Slept poorly', processList.filter((day) => day.sleptWell === false)),
+  ].filter((row) => row.days > 0);
+  const gradeRows = ['A', 'B', 'C', 'D', 'F']
+    .map((grade) => processSlice(grade, processList.filter((day) => day.grade === grade)))
+    .filter((row) => row.days > 0);
+  const checklistRows = [
+    processSlice('Checklist passed', processList.filter((day) => day.checklist === 'passed')),
+    processSlice('Checklist failed', processList.filter((day) => day.checklist === 'failed')),
+  ].filter((row) => row.days > 0);
+  const breakWeekdays = ruleBreakDaysByWeekday(
+    processList.map((day) => ({ date: day.date, broke: day.rulesFollowed === false })),
+  );
 
   const bestDayShare = stats.totalPnl > 0 && dayStats.bestDay ? (dayStats.bestDay.pnl / stats.totalPnl) * 100 : 0;
 
@@ -197,7 +318,8 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
             <Stat label="Total P&L" value={fmtSigned(stats.totalPnl)} tone={stats.totalPnl >= 0 ? 'up' : 'down'} />
             <Stat label="Avg win / avg loss" value={fmtNum(stats.winLossRatio)} sub={`${fmtMoney(stats.avgWin)} / ${fmtMoney(-stats.avgLoss)}`} />
             <Stat label="Day win %" value={fmtPct(dayStats.dayWinRate)} sub={`${dayStats.winningDays}/${dayStats.days} days`} />
-            <Stat label="Profit factor" value={fmtNum(stats.profitFactor)} />
+            <Stat label="Trade profit factor" value={fmtNum(stats.profitFactor)} sub="per trade" />
+            <Stat label="Day profit factor" value={dayPf == null ? '∞' : fmtNum(dayPf)} sub="green days / red days" />
             <Stat label="Expectancy" value={fmtSigned(stats.expectancy)} sub="per trade" tone={stats.expectancy >= 0 ? 'up' : 'down'} />
             <Stat label="Avg R" value={fmtR(stats.avgR)} sub={`${fmtR(stats.totalR)} total`} />
             <Stat label="Max drawdown" value={fmtMoney(-dd.amount)} sub={dd.at ? `at ${dd.at}` : undefined} tone="down" />
@@ -217,11 +339,24 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
           <Stat label={worstWeekday?.label ?? '—'} value={fmtSigned(worstWeekday?.stats.totalPnl ?? 0)} size="sm" tone="down" />
         </Card>
         <Card title="Streaks">
-          <StatGrid cols={3}>
-            <Stat label="Now" value={streak.current} size="sm" />
-            <Stat label="Best" value={streak.best} size="sm" tone="up" />
-            <Stat label="Worst" value={streak.worst} size="sm" tone="down" />
-          </StatGrid>
+          <div className="space-y-3">
+            <div>
+              <div className="card-title mb-1">Day streaks</div>
+              <StatGrid cols={3}>
+                <Stat label="Now" value={dayStreak.current} size="sm" />
+                <Stat label="Best" value={dayStreak.best} size="sm" tone="up" />
+                <Stat label="Worst" value={dayStreak.worst} size="sm" tone="down" />
+              </StatGrid>
+            </div>
+            <div>
+              <div className="card-title mb-1">Trade streaks</div>
+              <StatGrid cols={3}>
+                <Stat label="Now" value={tradeStreak.current} size="sm" />
+                <Stat label="Best" value={tradeStreak.best} size="sm" tone="up" />
+                <Stat label="Worst" value={tradeStreak.worst} size="sm" tone="down" />
+              </StatGrid>
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -254,7 +389,69 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         </Card>
       </div>
 
+      <div id="process" className="space-y-5">
+        <Card title="By day · rules followed vs broken">
+          <ProcessTable
+            rows={[followedSlice, brokenSlice].filter((row) => row.days > 0)}
+            empty="Mark Rules followed? on a day to see this."
+          />
+          <p className="mt-2 text-[11px] text-dim">
+            Day win % is green days over green and red days. A day can be marked followed and still carry a reason.
+          </p>
+        </Card>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Card title="Rule-break reasons by cost">
+            <ProcessTable rows={reasonRows} empty="No reasons logged in this range." />
+            <p className="mt-2 text-[11px] text-dim">Sorted by P&amp;L, most costly first. Cost is the day&rsquo;s result, not a single trade.</p>
+          </Card>
+          <Card title="Checklist passed vs failed">
+            <ProcessTable rows={checklistRows} empty="Tick a pre-session checklist to see this." />
+            <p className="mt-2 text-[11px] text-dim">
+              Failed means a session had more than {config.checklistSkipIfNo} No answers. Days with no checklist are left out.
+            </p>
+          </Card>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-3">
+          <Card title="By mood">
+            <ProcessTable rows={moodRows} empty="No mood logged." />
+          </Card>
+          <Card title="By sleep">
+            <ProcessTable rows={sleepRows} empty="No sleep answer logged." />
+          </Card>
+          <Card title="By grade">
+            <ProcessTable rows={gradeRows} empty="No grade logged." />
+          </Card>
+        </div>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-2">
+        <Card title="Rule-break days by weekday">
+          {breakWeekdays.length === 0 ? (
+            <p className="text-sm text-dim">No days in this range.</p>
+          ) : (
+            <table className="tabular text-sm">
+              <thead>
+                <tr>
+                  <th className="py-1.5">Weekday</th>
+                  <th className="text-right">Days</th>
+                  <th className="text-right">Rule-break days</th>
+                </tr>
+              </thead>
+              <tbody className="divide-rows">
+                {breakWeekdays.map((row) => (
+                  <tr key={row.weekday}>
+                    <td className="py-1.5">{row.weekday}</td>
+                    <td className="text-right">{row.days}</td>
+                    <td className="text-right">{row.breakDays}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <p className="mt-2 text-[11px] text-dim">
+            A rule-break day is one where Rules followed? is No.
+          </p>
+        </Card>
         <Card title="Weekdays">
           <BreakdownTable rows={weekdayRows} columns={['trades', 'winRate', 'avgR', 'bar']} />
         </Card>
@@ -290,7 +487,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         <Card title="Playbooks">
           <BreakdownTable rows={playbookRows} columns={['trades', 'winRate', 'avgR', 'pf']} emptyLabel="Attach a playbook to trades to see this." />
         </Card>
-        <Card title="Rules followed vs broken">
+        <Card title="By trade · rules followed vs broken">
           <BreakdownTable rows={ruleRows} columns={['trades', 'winRate', 'avgR', 'pf']} emptyLabel="Tick playbook rules on a trade to see this." />
         </Card>
       </div>

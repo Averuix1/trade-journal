@@ -198,6 +198,19 @@ export function AccountForm({
           </label>
           <input id="riskPerTrade" name="riskPerTrade" type="number" step="1" defaultValue={account?.riskPerTrade ?? 300} className="field" />
         </div>
+        <div className="sm:col-span-2 lg:col-span-4">
+          <label className="label" htmlFor="riskPresets">
+            Risk presets ($)
+          </label>
+          <input
+            id="riskPresets"
+            name="riskPresets"
+            defaultValue={(account?.riskPresets ?? [200, 250, 300, 400, 500]).join(', ')}
+            className="field"
+            placeholder="200, 250, 300, 400, 500"
+          />
+          <p className="mt-1 text-[11px] text-dim">Quick picks on the add-trade form. The default risk above is used when none of these is chosen.</p>
+        </div>
       </div>
 
       <div>

@@ -13,6 +13,7 @@ export async function saveGeneralSettings(_prev: FormState, formData: FormData):
     .set({
       timezone: str(formData.get('timezone')) ?? 'Australia/Sydney',
       beBandR: num(formData.get('beBandR')) ?? 0.09,
+      rRounding: num(formData.get('rRounding')) ?? 0,
       updatedAt: new Date(),
     })
     .where(eq(settings.id, 1));
@@ -25,11 +26,17 @@ export async function saveInstruments(_prev: FormState, formData: FormData): Pro
   for (let i = 0; i < symbols.length; i += 1) {
     const symbol = symbols[i];
     if (!symbol) continue;
+    const pointRaw = String(formData.getAll('pointValue')[i] ?? '').trim();
+    const aliases = String(formData.getAll('aliases')[i] ?? '')
+      .split(',')
+      .map((part) => part.trim().toUpperCase())
+      .filter((part) => part && part !== symbol);
     const values = {
       name: String(formData.getAll('name')[i] ?? symbol),
-      pointValue: Number(formData.getAll('pointValue')[i] ?? 1) || 1,
+      pointValue: pointRaw === '' ? null : Number(pointRaw),
       tickSize: Number(formData.getAll('tickSize')[i] ?? 0.25) || 0.25,
       commissionPerContract: Number(formData.getAll('commissionPerContract')[i] ?? 0) || 0,
+      aliases,
       sortOrder: i,
     };
     await db.insert(instruments).values({ symbol, ...values }).onConflictDoUpdate({ target: instruments.symbol, set: values });
@@ -41,7 +48,7 @@ export async function saveInstruments(_prev: FormState, formData: FormData): Pro
       .values({
         symbol: newSymbol,
         name: str(formData.get('newName')) ?? newSymbol,
-        pointValue: num(formData.get('newPointValue')) ?? 1,
+        pointValue: num(formData.get('newPointValue')),
         tickSize: num(formData.get('newTickSize')) ?? 0.25,
         commissionPerContract: num(formData.get('newCommission')) ?? 0,
         sortOrder: symbols.length,
@@ -70,6 +77,10 @@ export async function saveSessions(_prev: FormState, formData: FormData): Promis
         startMinute: clockToMinutes(String(formData.getAll('start')[i] ?? '00:00')),
         endMinute: clockToMinutes(String(formData.getAll('end')[i] ?? '00:00')),
         entryWindowMins: Number(formData.getAll('entryWindow')[i] ?? 30) || 0,
+        aliases: String(formData.getAll('sessionAliases')[i] ?? '')
+          .split(',')
+          .map((part) => part.trim())
+          .filter(Boolean),
         sortOrder: i,
       })
       .where(eq(sessionDefs.key, keys[i]));
@@ -101,10 +112,31 @@ export async function deleteSession(formData: FormData) {
   revalidatePath('/', 'layout');
 }
 
+export async function saveChecklist(_prev: FormState, formData: FormData): Promise<FormState> {
+  const items = String(formData.get('items') ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  await db
+    .update(settings)
+    .set({
+      checklistItems: items,
+      checklistSkipIfNo: num(formData.get('checklistSkipIfNo')) ?? 2,
+      updatedAt: new Date(),
+    })
+    .where(eq(settings.id, 1));
+  revalidatePath('/', 'layout');
+  return { ok: true, message: 'Checklist saved.' };
+}
+
 export async function addMistakeTag(_prev: FormState, formData: FormData): Promise<FormState> {
   const name = str(formData.get('name'));
   if (!name) return { error: 'Type a tag name.' };
-  await db.insert(mistakeTags).values({ name, sortOrder: 99 });
+  const existing = await db.select({ name: mistakeTags.name }).from(mistakeTags);
+  if (existing.some((tag) => tag.name.toLowerCase() === name.toLowerCase())) {
+    return { error: 'That reason is already in the list.' };
+  }
+  await db.insert(mistakeTags).values({ name, sortOrder: 99 }).onConflictDoNothing();
   revalidatePath('/', 'layout');
   return { ok: true, message: 'Tag added.' };
 }

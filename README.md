@@ -15,13 +15,13 @@ and has no kill switch, no sharing, no community, no AI and no billing.
 | **Desk** | Today at a glance: balance, change from start, ROI, today's trades and R, one card per session with your T1/T2/T3 slots, your prop rules, challenge pace, equity curve and the mini month calendar. |
 | **System** | "You gave $X back." Compares the account you would have had if you had only taken in-system trades against the one you actually have. Shows the leak, why it leaked, and lets you edit the rules. |
 | **Calendar** | Month or week grid of green/red day tiles with a weekly totals column, filters for session, in/outside system and $/R, monthly summary cards, a daily log table, and a day side panel with the intraday curve, screenshots, trades and the day journal. |
-| **Stats** | Win %, profit factor, expectancy, avg R, max drawdown, best-day share, and breakdowns by session, weekday, hour, instrument, slot, playbook, rule followed vs broken, mistake tag and eval vs funded. |
+| **Stats** | Win %, trade and day profit factor, day and trade streaks, plus process stats: rules followed vs broken, reasons by cost, weekday rule-breaks, and results by mood, sleep, grade and checklist. |
 | **Tank** | How many contracts for a given stop size and risk, and how many full-risk losses you have left before the drawdown cut-off (prop) or a zero balance (personal). |
 | **Trades** | Filterable list with a fast add/edit form. P&L, fees and R are calculated for you and can be overridden. |
 | **Money** | Per-account ledger (eval/reset/activation/monthly/data fees, payouts, deposits, withdrawals) plus a prop-house roll-up: total fees, payouts, net, cost per pass, cost per payout, eval vs funded tape and return on spend. |
 | **Playbooks** | Your own setups, each with its own rules checklist, plus per-rule follow rate and P&L. |
-| **Import** | CSV import from TopstepX and Tradovate with column mapping, a preview, duplicate detection and undo. Also JSON backup and restore. |
-| **Settings** | Timezone, breakeven band, the contract table with commissions, session windows and mistake tags. |
+| **Import** | CSV import from TopstepX, Tradovate and a Google Sheets journal export, with a preview, duplicate detection and undo. Also JSON backup and restore. |
+| **Settings** | Timezone, breakeven band, R display rounding, the contract table (aliases, optional point value), session windows and aliases, a pre-trade checklist and mistake tags. |
 | **Accounts** | Create prop or personal accounts, mark passed/blown, archive, and log a reset that opens a fresh eval with the same rules. |
 
 ### How the rules engine works
@@ -34,6 +34,8 @@ automatically:
 - the 4th and beyond become **Dump**;
 - an entry after the entry window, or outside any session you trade, is **Late / outside**;
 - ticking a playbook rule as broken, or attaching a mistake tag, is also a break.
+
+The Google Sheets preset reads a day-per-slot export: date, session, slot, instrument, direction, dollar risk and dollar result. It recalculates R and does not trust the sheet's formula columns. Sheet dates are New York trading days. NASDAQ and NAS100 are aliased to NQ, and US30 to YM; any other unknown name is added as a dollar / R instrument. "New York" maps to New York AM, because the file has no clock time. You pick one account, or assign rows and date ranges in the preview. $500 risk is called out as a placeholder you can keep or replace. Day notes, the rules-followed answer, the reason and chart links are stored on the day. Undoing the import removes the trades and leaves those day notes.
 
 A trade with no breaks is **in system**. Everything else is **outside**, and that split drives the
 System page, the calendar filters and the stats.

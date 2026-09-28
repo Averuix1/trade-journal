@@ -1,6 +1,6 @@
 // Local verification pass: exercises the main flows and writes screenshots.
 //   node scripts/verify.mjs [baseUrl] [outDir]
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const BASE = process.argv[2] ?? 'http://localhost:3000';
@@ -173,8 +173,81 @@ try {
   if (hasHistory) {
     await page.getByRole('button', { name: 'Undo import' }).first().click();
     await page.waitForTimeout(2000);
-    check('Undo import removes the batch', (await page.getByRole('button', { name: 'Undo import' }).count()) === 0);
+      check('Undo import removes the batch', (await page.getByRole('button', { name: 'Undo import' }).count()) === 0);
   }
+
+  // --- google sheets journal (preview, day record, then undo so demo data stays clean) ---
+  const uploadDir = '/home/ubuntu/.cursor/projects/workspace/uploads';
+  const sheetName = readdirSync(uploadDir)
+    .filter((name) => name.startsWith('sheet-trades-all') && name.endsWith('.csv'))
+    .sort()
+    .at(-1);
+  const sheetCsv = `${uploadDir}/${sheetName}`;
+  await page.goto(`${BASE}/import`, { waitUntil: 'networkidle' });
+  await page.setInputFiles('#file', sheetCsv);
+  await page.getByRole('button', { name: 'Read file' }).click();
+  await page.waitForTimeout(2000);
+  check('Sheet preset is detected', await page.getByText('Google Sheets journal').first().isVisible());
+  check('Sheet preview recalculates R', await page.getByText('+2.23R').isVisible());
+  check('Sheet preview notes the $500 placeholder', await page.getByText(/\$500 is a placeholder/).isVisible());
+  await shot('16-sheet-import');
+  const sheetButton = page.getByRole('button', { name: /^Import \d+ trades$/ });
+  const sheetLabel = await sheetButton.innerText();
+  check('Sheet preview counts 18 trades', /Import 18 trades/.test(sheetLabel), sheetLabel);
+  await sheetButton.click();
+  await page.waitForTimeout(4000);
+  check('Sheet import reports 18 trades', await page.getByText(/Imported 18 trade/).isVisible());
+
+  await page.goto(`${BASE}/calendar?month=2026-09&day=2026-09-14`, { waitUntil: 'networkidle' });
+  await page.getByLabel('Rules followed?').scrollIntoViewIfNeeded();
+  await shot('17-day-record');
+  check('Day record has rules followed', await page.getByLabel('Rules followed?').isVisible());
+  check('Day record keeps the reason separate', await page.getByLabel('Rule-break reason').isVisible());
+  for (const name of ['check_london_0', 'check_london_1', 'check_london_2']) {
+    await page.locator(`select[name="${name}"]`).selectOption('no');
+  }
+  await page.getByText('Pre-trade checklist').scrollIntoViewIfNeeded();
+  await shot('18-checklist');
+  check('Day checklist warns about skipping', await page.getByText(/consider skipping/).isVisible());
+  await page.getByRole('button', { name: 'Save journal' }).click();
+  await page.waitForTimeout(1500);
+
+  await page.goto(`${BASE}/stats`, { waitUntil: 'networkidle' });
+  await page.locator('#process').scrollIntoViewIfNeeded();
+  await shot('19-process-stats');
+  check('Stats show day profit factor', await page.getByText('Day profit factor').isVisible());
+  check(
+    'Stats show rules followed vs broken',
+    await page.getByRole('heading', { name: 'By day · rules followed vs broken' }).isVisible(),
+  );
+  check('Stats show checklist passed vs failed', await page.getByText('Checklist passed vs failed').isVisible());
+
+  await page.goto(`${BASE}/import`, { waitUntil: 'networkidle' });
+  const sheetHistory = (await page.getByRole('button', { name: 'Undo import' }).count()) > 0;
+  if (sheetHistory) {
+    await page.getByRole('button', { name: 'Undo import' }).first().click();
+    await page.waitForTimeout(2500);
+    check('Undo sheet import removes the batch', (await page.getByRole('button', { name: 'Undo import' }).count()) === 0);
+  } else {
+    check('Undo sheet import removes the batch', false, 'no undo button');
+  }
+
+  await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+  await page.getByText('Contracts & commissions').scrollIntoViewIfNeeded();
+  await shot('20-settings-aliases');
+  const aliasValues = await page.locator('input[name="aliases"]').evaluateAll((els) => els.map((el) => el.value));
+  const symbols = await page.locator('input[name="symbol"]').evaluateAll((els) => els.map((el) => el.value));
+  check(
+    'Settings list instrument aliases',
+    aliasValues.some((value) => value.includes('NASDAQ')) && aliasValues.some((value) => value.includes('US30')) && symbols.includes('MYM'),
+    aliasValues.join(' | '),
+  );
+  await page.getByText('Mistake tags').scrollIntoViewIfNeeded();
+  await shot('21-settings-reasons');
+  check('Settings seed the eight reasons', await page.getByText('Overtrading').isVisible() && await page.getByText('Late Entry').isVisible());
+  await page.getByText('Pre-trade checklist').scrollIntoViewIfNeeded();
+  await shot('22-settings-checklist');
+  check('Checklist editor is on Settings', await page.getByRole('button', { name: 'Save checklist' }).isVisible());
 
   // --- playbooks ---
   await page.goto(`${BASE}/playbooks`, { waitUntil: 'networkidle' });

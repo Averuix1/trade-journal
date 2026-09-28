@@ -19,32 +19,96 @@ import {
   type DayJournal,
   type Trade,
 } from '@/lib/db/schema';
-import { DEFAULT_INSTRUMENTS, DEFAULT_MISTAKE_TAGS, DEFAULT_SESSIONS, FEE_KINDS } from '@/lib/defaults';
+import {
+  DEFAULT_CHECKLIST,
+  DEFAULT_INSTRUMENTS,
+  DEFAULT_MISTAKE_TAGS,
+  DEFAULT_SESSION_ALIASES,
+  DEFAULT_SESSIONS,
+  FEE_KINDS,
+  SEEDED_INSTRUMENT_ALIASES,
+} from '@/lib/defaults';
 
 export const ACCOUNT_COOKIE = 'tj_account';
 
-let bootstrapped = false;
+let bootstrapTask: Promise<void> | null = null;
 
 /** Seeds the reference tables (instruments, sessions, tags, settings row) exactly once. */
-export async function ensureBootstrapped(): Promise<void> {
-  if (bootstrapped) return;
+export function ensureBootstrapped(): Promise<void> {
+  if (!bootstrapTask) {
+    bootstrapTask = runBootstrap().catch((error) => {
+      bootstrapTask = null;
+      throw error;
+    });
+  }
+  return bootstrapTask;
+}
+
+async function runBootstrap(): Promise<void> {
   await db
     .insert(settings)
     .values({ id: 1 })
     .onConflictDoNothing();
   await db.insert(instruments).values(DEFAULT_INSTRUMENTS).onConflictDoNothing();
   await db.insert(sessionDefs).values(DEFAULT_SESSIONS).onConflictDoNothing();
-  const existingTags = await db.select({ id: mistakeTags.id }).from(mistakeTags).limit(1);
-  if (!existingTags.length) {
-    await db.insert(mistakeTags).values(DEFAULT_MISTAKE_TAGS.map((name, i) => ({ name, sortOrder: i })));
+  const existingTags = await db.select({ id: mistakeTags.id, name: mistakeTags.name }).from(mistakeTags).orderBy(asc(mistakeTags.id));
+  const seen = new Set<string>();
+  const duplicateIds: number[] = [];
+  for (const tag of existingTags) {
+    const key = tag.name.toLowerCase();
+    if (seen.has(key)) duplicateIds.push(tag.id);
+    else seen.add(key);
   }
-  bootstrapped = true;
+  if (duplicateIds.length) await db.delete(mistakeTags).where(inArray(mistakeTags.id, duplicateIds));
+  const missing = DEFAULT_MISTAKE_TAGS.filter((name) => !seen.has(name.toLowerCase()));
+  if (missing.length) {
+    await db
+      .insert(mistakeTags)
+      .values(missing.map((name, i) => ({ name, sortOrder: existingTags.length + i })))
+      .onConflictDoNothing();
+  }
+
+  const specs = await db.select().from(instruments);
+  for (const spec of specs) {
+    const seeded = SEEDED_INSTRUMENT_ALIASES[spec.symbol];
+    if (seeded && (!spec.aliases || spec.aliases.length === 0)) {
+      await db.update(instruments).set({ aliases: seeded }).where(eq(instruments.symbol, spec.symbol));
+    }
+  }
+
+  const sessions = await db.select().from(sessionDefs);
+  for (const session of sessions) {
+    const aliases = DEFAULT_SESSION_ALIASES[session.key];
+    if (aliases && (!session.aliases || session.aliases.length === 0)) {
+      await db.update(sessionDefs).set({ aliases }).where(eq(sessionDefs.key, session.key));
+    }
+  }
+
+  const [config] = await db.select().from(settings).where(eq(settings.id, 1));
+  if (config && (!config.checklistItems || config.checklistItems.length === 0)) {
+    await db
+      .update(settings)
+      .set({ checklistItems: DEFAULT_CHECKLIST, checklistSkipIfNo: 2 })
+      .where(eq(settings.id, 1));
+  }
 }
 
 export async function getSettings() {
   await ensureBootstrapped();
   const [row] = await db.select().from(settings).where(eq(settings.id, 1));
-  return row ?? { id: 1, timezone: 'Australia/Sydney', beBandR: 0.09, lastSymbol: null, lastAccountId: null, updatedAt: new Date() };
+  return (
+    row ?? {
+      id: 1,
+      timezone: 'Australia/Sydney',
+      beBandR: 0.09,
+      rRounding: 0,
+      checklistItems: [] as string[],
+      checklistSkipIfNo: 2,
+      lastSymbol: null,
+      lastAccountId: null,
+      updatedAt: new Date(),
+    }
+  );
 }
 
 export async function getAccounts(): Promise<Account[]> {

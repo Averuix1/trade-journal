@@ -156,9 +156,24 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
             </thead>
             <tbody className="divide-rows">
               {instruments.map((inst) => {
-                const contractsAt = (stop: number) => Math.floor(risk / (stop * inst.pointValue));
+                if (inst.pointValue == null) {
+                  return (
+                    <tr key={inst.symbol}>
+                      <td className="py-1.5">
+                        <span className="font-medium text-[#e6fff5]">{inst.symbol}</span>
+                        <span className="ml-2 text-xs text-dim">{inst.name}</span>
+                      </td>
+                      <td className="text-right text-dim">$ / R only</td>
+                      <td colSpan={stops.length + 2} className="text-dim">
+                        Dollar results only
+                      </td>
+                    </tr>
+                  );
+                }
+                const pointValue = inst.pointValue;
+                const contractsAt = (stop: number) => Math.floor(risk / (stop * pointValue));
                 const chosen = Math.max(0, contractsAt(activeStop));
-                const actualRisk = chosen * activeStop * inst.pointValue;
+                const actualRisk = chosen * activeStop * pointValue;
                 const left = actualRisk > 0 ? Math.floor(Math.max(0, drawdownRoom) / actualRisk) : 0;
                 return (
                   <tr key={inst.symbol}>
@@ -166,7 +181,7 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
                       <span className="font-medium text-[#e6fff5]">{inst.symbol}</span>
                       <span className="ml-2 text-xs text-dim">{inst.name}</span>
                     </td>
-                    <td className="text-right text-dim">{fmtMoney(inst.pointValue)}</td>
+                    <td className="text-right text-dim">{fmtMoney(pointValue)}</td>
                     {stops.map((s) => {
                       const n = contractsAt(s);
                       return (

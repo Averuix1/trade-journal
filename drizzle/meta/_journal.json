@@ -8,6 +8,20 @@
       "when": 1790593452361,
       "tag": "0000_goofy_thaddeus_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790597000000,
+      "tag": "0001_sheet_journal",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790598000000,
+      "tag": "0002_mistake_tag_names",
+      "breakpoints": true
     }
   ]
 }

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { Account, Instrument, MistakeTag, Playbook, PlaybookRule, Trade } from '@/lib/db/schema';
 import { createTrade, updateTrade } from '@/lib/actions/trades';
 import type { FormState } from '@/lib/actions/shared';
-import { autoFees, autoPnl, autoR } from '@/lib/calc';
+import { autoFees, autoPnl, autoR, rFromRisk } from '@/lib/calc';
 import { fmtMoney, fmtR } from '@/lib/format';
 
 const initial: FormState = {};
@@ -39,9 +39,14 @@ export function TradeForm({
 }) {
   const [state, action, pending] = useActionState(trade ? updateTrade : createTrade, initial);
 
+  const [accountId, setAccountId] = useState(String(trade?.accountId ?? defaultAccountId));
+  const selectedAccount = accounts.find((a) => String(a.id) === accountId) ?? accounts[0];
   const [symbol, setSymbol] = useState(trade?.symbol ?? defaultSymbol);
   const [side, setSide] = useState<'LONG' | 'SHORT'>(trade?.side ?? 'LONG');
-  const [contracts, setContracts] = useState(String(trade?.contracts ?? 1));
+  const [contracts, setContracts] = useState(trade?.contracts != null ? String(trade.contracts) : '1');
+  const [plannedRisk, setPlannedRisk] = useState(
+    trade?.plannedRisk != null ? String(trade.plannedRisk) : String(selectedAccount?.riskPerTrade ?? ''),
+  );
   const [entry, setEntry] = useState(trade?.entryPrice != null ? String(trade.entryPrice) : '');
   const [stop, setStop] = useState(trade?.stopPrice != null ? String(trade.stopPrice) : '');
   const [exit, setExit] = useState(trade?.exitPrice != null ? String(trade.exitPrice) : '');
@@ -52,16 +57,23 @@ export function TradeForm({
   const [playbookId, setPlaybookId] = useState(trade?.playbookId ? String(trade.playbookId) : '');
 
   const instrument = instruments.find((i) => i.symbol === symbol) ?? instruments[0];
-  const numContracts = Number(contracts) || 0;
-  const computedFees = instrument ? autoFees(numContracts, instrument.commissionPerContract) : 0;
+  const contractsKnown = contracts.trim() !== '' && Number(contracts) > 0;
+  const numContracts = contractsKnown ? Number(contracts) : 0;
+  const pointValue = instrument?.pointValue ?? null;
+  const computedFees = instrument && contractsKnown ? autoFees(numContracts, instrument.commissionPerContract) : 0;
   const effectiveFees = feesOverridden ? Number(fees) || 0 : computedFees;
-  const computedPnl = instrument
-    ? autoPnl(side, entry === '' ? null : Number(entry), exit === '' ? null : Number(exit), numContracts, instrument.pointValue, effectiveFees)
-    : null;
+  const computedPnl =
+    pointValue != null && contractsKnown
+      ? autoPnl(side, entry === '' ? null : Number(entry), exit === '' ? null : Number(exit), numContracts, pointValue, effectiveFees)
+      : null;
   const effectivePnl = pnlOverridden ? Number(pnl) || 0 : (computedPnl ?? 0);
-  const computedR = instrument
-    ? autoR(side, entry === '' ? null : Number(entry), stop === '' ? null : Number(stop), numContracts, instrument.pointValue, effectivePnl)
-    : null;
+  const priceR =
+    pointValue != null && contractsKnown
+      ? autoR(side, entry === '' ? null : Number(entry), stop === '' ? null : Number(stop), numContracts, pointValue, effectivePnl)
+      : null;
+  const riskBasis = plannedRisk.trim() === '' ? (selectedAccount?.riskPerTrade ?? null) : Number(plannedRisk);
+  const computedR = priceR ?? rFromRisk(effectivePnl, riskBasis);
+  const presets = selectedAccount?.riskPresets?.length ? selectedAccount.riskPresets : [];
 
   const rules = useMemo(
     () => playbookRules.filter((r) => String(r.playbookId) === playbookId),
@@ -77,7 +89,7 @@ export function TradeForm({
           <label className="label" htmlFor="accountId">
             Account
           </label>
-          <select id="accountId" name="accountId" defaultValue={String(trade?.accountId ?? defaultAccountId)} className="field">
+          <select id="accountId" name="accountId" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="field">
             {accounts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -92,7 +104,7 @@ export function TradeForm({
           <select id="symbol" name="symbol" value={symbol} onChange={(e) => setSymbol(e.target.value)} className="field">
             {instruments.map((i) => (
               <option key={i.symbol} value={i.symbol}>
-                {i.symbol} · {fmtMoney(i.pointValue)}/pt
+                {i.symbol} · {i.pointValue == null ? '$ / R only' : `${fmtMoney(i.pointValue)}/pt`}
               </option>
             ))}
           </select>
@@ -145,7 +157,7 @@ export function TradeForm({
           <label className="label" htmlFor="contracts">
             Contracts
           </label>
-          <input id="contracts" name="contracts" type="number" step="1" min="1" value={contracts} onChange={(e) => setContracts(e.target.value)} className="field" />
+          <input id="contracts" name="contracts" type="number" step="1" min="0" value={contracts} onChange={(e) => setContracts(e.target.value)} className="field" />
         </div>
         <div>
           <label className="label" htmlFor="entryPrice">
@@ -178,6 +190,39 @@ export function TradeForm({
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="rounded-xl border border-line bg-ink-850/50 p-4">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <label className="label mb-0" htmlFor="plannedRisk">
+            Planned risk ($)
+          </label>
+          <div className="flex flex-wrap gap-1">
+            {presets.map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                className={`btn btn-sm ${Number(plannedRisk) === amount ? 'btn-primary' : ''}`}
+                onClick={() => setPlannedRisk(String(amount))}
+              >
+                {fmtMoney(amount)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <input
+          id="plannedRisk"
+          name="plannedRisk"
+          type="number"
+          step="1"
+          min="0"
+          value={plannedRisk}
+          onChange={(e) => setPlannedRisk(e.target.value)}
+          className="field max-w-xs"
+        />
+        <p className="mt-1 text-[11px] text-dim">
+          Used for R when the trade has a dollar result and no stop. Blank uses this account&rsquo;s default risk.
+        </p>
       </div>
 
       <div className="grid gap-4 rounded-xl border border-line bg-ink-850/50 p-4 sm:grid-cols-3">
@@ -213,7 +258,11 @@ export function TradeForm({
             disabled={!pnlOverridden}
             className="field disabled:opacity-60"
           />
-          <p className="mt-1 text-[11px] text-dim">Net of fees, from entry/exit and {fmtMoney(instrument?.pointValue ?? 0)}/pt.</p>
+          <p className="mt-1 text-[11px] text-dim">
+            {pointValue == null
+              ? 'This symbol has no point value, so enter the result in dollars.'
+              : `Net of fees, from entry/exit and ${fmtMoney(pointValue)}/pt.`}
+          </p>
         </div>
         <div>
           <span className="label">Result</span>
@@ -221,7 +270,7 @@ export function TradeForm({
             <div className={`tabular text-lg font-semibold ${effectivePnl >= 0 ? 'text-[#7df3bd]' : 'text-[#ff8c96]'}`}>
               {fmtMoney(effectivePnl, true)}
             </div>
-            <div className="text-[11px] text-dim">{computedR == null ? 'Add a stop for R' : fmtR(computedR)}</div>
+            <div className="text-[11px] text-dim">{computedR == null ? 'Add a stop or a risk amount for R' : fmtR(computedR)}</div>
           </div>
           <input type="hidden" name="rMultiple" value={computedR ?? ''} />
         </div>

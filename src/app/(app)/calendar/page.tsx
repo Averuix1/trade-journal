@@ -6,6 +6,7 @@ import {
   getHiddenDays,
   getJournal,
   getJournals,
+  getMistakeTags,
   getScope,
   getScreenshots,
   getSessionDefs,
@@ -38,7 +39,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, sessions] = await Promise.all([getSettings(), getSessionDefs()]);
+  const [config, sessions, tags] = await Promise.all([getSettings(), getSessionDefs(), getMistakeTags()]);
   const today = todayKey('America/New_York');
   const month = one(params.month) ?? today.slice(0, 7);
   const view = one(params.view) === 'week' ? 'week' : 'month';
@@ -126,6 +127,12 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
         sessions,
         timezone: config.timezone,
         closeHref: qs({ day: undefined }),
+        mistakeTags: tags.map((tag) => tag.name),
+        activeSessionKeys: scope.account?.activeSessions?.length
+          ? scope.account.activeSessions
+          : sessions.map((session) => session.key),
+        checklistItems: config.checklistItems ?? [],
+        checklistSkipIfNo: config.checklistSkipIfNo ?? 2,
       }
     : null;
 
