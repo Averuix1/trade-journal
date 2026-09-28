@@ -106,6 +106,7 @@ export async function getSettings() {
       checklistSkipIfNo: 2,
       lastSymbol: null,
       lastAccountId: null,
+      tradeEntryMode: 'quick' as const,
       updatedAt: new Date(),
     }
   );

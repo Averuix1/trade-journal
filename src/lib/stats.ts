@@ -21,6 +21,8 @@ export type TradeStats = {
   totalPnl: number;
   totalR: number;
   avgR: number;
+  /** Mean of stored planned reward:risk. Null when no trade in the set has one. */
+  avgPlannedRr: number | null;
   grossProfit: number;
   grossLoss: number;
   winRate: number;
@@ -45,6 +47,7 @@ export const EMPTY_STATS: TradeStats = {
   totalPnl: 0,
   totalR: 0,
   avgR: 0,
+  avgPlannedRr: null,
   grossProfit: 0,
   grossLoss: 0,
   winRate: 0,
@@ -81,6 +84,8 @@ export function computeStats(trades: Trade[], beBandR: number): TradeStats {
   let totalPnl = 0;
   let totalR = 0;
   let rCount = 0;
+  let plannedSum = 0;
+  let plannedCount = 0;
   let best = -Infinity;
   let worst = Infinity;
   const holds: number[] = [];
@@ -92,6 +97,10 @@ export function computeStats(trades: Trade[], beBandR: number): TradeStats {
     if (t.rMultiple != null) {
       totalR += t.rMultiple;
       rCount += 1;
+    }
+    if (t.plannedRr != null) {
+      plannedSum += t.plannedRr;
+      plannedCount += 1;
     }
     best = Math.max(best, t.pnl);
     worst = Math.min(worst, t.pnl);
@@ -126,6 +135,7 @@ export function computeStats(trades: Trade[], beBandR: number): TradeStats {
     totalPnl: round2(totalPnl),
     totalR: round2(totalR),
     avgR: rCount ? round2(totalR / rCount) : 0,
+    avgPlannedRr: plannedCount ? round2(plannedSum / plannedCount) : null,
     grossProfit: round2(grossProfit),
     grossLoss: round2(grossLoss),
     winRate: round2(winRate),

@@ -16,7 +16,7 @@ import {
 } from '@/lib/queries';
 import { computeStats } from '@/lib/stats';
 import { fmtHold, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
-import { formatTime, utcToZonedInput } from '@/lib/time';
+import { formatTime, tradingDay, utcToZonedInput } from '@/lib/time';
 import { BREAK_LABELS } from '@/lib/defaults';
 
 export const metadata = { title: 'Trades — Trade Journal' };
@@ -78,6 +78,7 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
           <TradeForm
             accounts={scope.accounts}
             instruments={instruments}
+            sessions={sessions}
             playbooks={playbooks}
             playbookRules={playbookRules}
             mistakeTags={mistakeTags}
@@ -87,6 +88,9 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
             defaultAccountId={defaultAccountId}
             defaultSymbol={defaultSymbol}
             defaultOpenedAt={defaultOpenedAt}
+            defaultDate={tradingDay(now)}
+            timezone={config.timezone}
+            entryMode={config.tradeEntryMode === 'detailed' ? 'detailed' : 'quick'}
             cancelHref="/trades"
           />
         </Card>

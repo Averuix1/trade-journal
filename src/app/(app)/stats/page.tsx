@@ -321,7 +321,12 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
             <Stat label="Trade profit factor" value={fmtNum(stats.profitFactor)} sub="per trade" />
             <Stat label="Day profit factor" value={dayPf == null ? '∞' : fmtNum(dayPf)} sub="green days / red days" />
             <Stat label="Expectancy" value={fmtSigned(stats.expectancy)} sub="per trade" tone={stats.expectancy >= 0 ? 'up' : 'down'} />
-            <Stat label="Avg R" value={fmtR(stats.avgR)} sub={`${fmtR(stats.totalR)} total`} />
+            <Stat label="Avg achieved R" value={fmtR(stats.avgR)} sub={`${fmtR(stats.totalR)} total`} />
+            <Stat
+              label="Avg planned RR"
+              value={stats.avgPlannedRr == null ? '—' : fmtR(stats.avgPlannedRr)}
+              sub="take profit ÷ risk"
+            />
             <Stat label="Max drawdown" value={fmtMoney(-dd.amount)} sub={dd.at ? `at ${dd.at}` : undefined} tone="down" />
             <Stat label="Best day % of profit" value={fmtPct(bestDayShare)} sub="consistency check" />
           </StatGrid>

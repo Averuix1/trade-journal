@@ -54,6 +54,32 @@ export function rFromRisk(netPnl: number, plannedRisk: number | null | undefined
   return round2(netPnl / plannedRisk);
 }
 
+export type QuickOutcome = 'win' | 'loss' | 'be' | 'custom';
+
+/** Planned reward:risk. 500 take profit on 250 risk is 2. */
+export function plannedRewardRisk(takeProfit: number | null | undefined, risk: number | null | undefined): number | null {
+  if (takeProfit == null || risk == null || risk <= 0 || takeProfit < 0) return null;
+  return round2(takeProfit / risk);
+}
+
+/** Dollar result for a quick trade. Fees, when typed, come off that result. */
+export function quickPnl(
+  outcome: QuickOutcome,
+  risk: number | null | undefined,
+  takeProfit: number | null | undefined,
+  custom: number | null | undefined,
+  fees: number,
+): number | null {
+  if (risk == null || risk <= 0) return null;
+  let gross: number | null = null;
+  if (outcome === 'win') gross = takeProfit == null ? null : takeProfit;
+  else if (outcome === 'loss') gross = -risk;
+  else if (outcome === 'be') gross = 0;
+  else gross = custom ?? null;
+  if (gross == null || !Number.isFinite(gross)) return null;
+  return round2(gross - (fees || 0));
+}
+
 export function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }

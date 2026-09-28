@@ -3,14 +3,20 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { accounts, instruments, screenshots, settings, trades } from '@/lib/db/schema';
-import { autoFees, autoPnl, autoR, rFromRisk, round2 } from '@/lib/calc';
+import { accounts, instruments, screenshots, sessionDefs, settings, trades } from '@/lib/db/schema';
+import { autoFees, autoPnl, autoR, plannedRewardRisk, quickPnl, rFromRisk, round2, type QuickOutcome } from '@/lib/calc';
 import { tradingDay, zonedInputToUtc } from '@/lib/time';
 import { getSettings } from '@/lib/queries';
 import { saveScreenshot } from '@/lib/blob';
+import { placeholderOpen } from '@/lib/sheet-import';
 import { bool, num, numList, recomputeAccountDays, str, strList, type FormState } from '@/lib/actions/shared';
+import type { Trade } from '@/lib/db/schema';
 
-async function buildTradeValues(formData: FormData) {
+function isQuickOutcome(value: string | null): value is QuickOutcome {
+  return value === 'win' || value === 'loss' || value === 'be' || value === 'custom';
+}
+
+async function buildTradeValues(formData: FormData, existing?: Trade) {
   const config = await getSettings();
   const accountId = Number(formData.get('accountId'));
   if (!accountId) throw new Error('Pick an account.');
@@ -19,8 +25,73 @@ async function buildTradeValues(formData: FormData) {
   const [account] = await db.select().from(accounts).where(eq(accounts.id, accountId));
   if (!account) throw new Error('Pick an account.');
   const pointValue = instrument?.pointValue ?? null;
-
   const side = (str(formData.get('side')) ?? 'LONG') as 'LONG' | 'SHORT';
+  const quick = str(formData.get('entryMode')) !== 'detailed';
+
+  const shared = {
+    accountId,
+    symbol,
+    side,
+    playbookId: num(formData.get('playbookId')),
+    brokenRuleIds: numList(formData, 'brokenRuleIds'),
+    followedRuleIds: numList(formData, 'followedRuleIds'),
+    mistakeTags: strList(formData, 'mistakeTags'),
+    hidden: bool(formData.get('hidden')),
+    notes: str(formData.get('notes')),
+  };
+
+  if (quick) {
+    const date = str(formData.get('tradeDate'));
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Pick the trading day.');
+    const time = str(formData.get('tradeTime'));
+    const risk = num(formData.get('plannedRisk')) ?? account.riskPerTrade;
+    if (risk == null || risk <= 0) throw new Error('Enter the dollar risk.');
+    const outcome = str(formData.get('outcome'));
+    if (!isQuickOutcome(outcome)) throw new Error('Pick Win, Loss, Breakeven, or Partial.');
+    const takeProfit = num(formData.get('takeProfit'));
+    const fees = num(formData.get('fees')) ?? 0;
+    const pnl = quickPnl(outcome, risk, takeProfit, num(formData.get('customPnl')), fees);
+    if (pnl == null) throw new Error(outcome === 'win' ? 'Enter the take-profit target.' : 'Enter the dollar result.');
+
+    let openedAt: Date;
+    let timeKnown = true;
+    if (time) {
+      openedAt = zonedInputToUtc(`${date}T${time}`, config.timezone);
+    } else {
+      const sessionKey = str(formData.get('sessionKey'));
+      const defs = await db.select().from(sessionDefs);
+      const session = defs.find((row) => row.key === sessionKey);
+      if (!session) throw new Error('Pick the session.');
+      const sameDay = await db
+        .select({ id: trades.id, sessionKey: trades.sessionKey })
+        .from(trades)
+        .where(and(eq(trades.accountId, accountId), eq(trades.tradeDate, date)));
+      const taken = sameDay.filter((row) => row.id !== existing?.id && row.sessionKey === session.key).length;
+      openedAt = placeholderOpen(date, session, `T${taken + 1}`);
+      timeKnown = false;
+    }
+
+    return {
+      ...shared,
+      openedAt,
+      closedAt: null,
+      tradeDate: time ? tradingDay(openedAt) : date,
+      contracts: existing?.contracts ?? null,
+      plannedRisk: risk,
+      takeProfit,
+      plannedRr: plannedRewardRisk(takeProfit, risk),
+      timeKnown,
+      entryPrice: existing?.entryPrice ?? null,
+      stopPrice: existing?.stopPrice ?? null,
+      exitPrice: existing?.exitPrice ?? null,
+      fees: round2(fees),
+      feesOverridden: true,
+      pnl,
+      pnlOverridden: true,
+      rMultiple: rFromRisk(pnl, risk),
+    };
+  }
+
   const contracts = num(formData.get('contracts'));
   const plannedRisk = num(formData.get('plannedRisk'));
   const entryPrice = num(formData.get('entryPrice'));
@@ -49,14 +120,14 @@ async function buildTradeValues(formData: FormData) {
   const rMultiple = priceR ?? rFromRisk(pnl, plannedRisk ?? account.riskPerTrade);
 
   return {
-    accountId,
+    ...shared,
     openedAt,
     closedAt,
     tradeDate: tradingDay(openedAt),
-    symbol,
-    side,
     contracts,
     plannedRisk,
+    takeProfit: existing?.takeProfit ?? null,
+    plannedRr: existing?.plannedRr ?? null,
     timeKnown: true,
     entryPrice,
     stopPrice,
@@ -66,12 +137,6 @@ async function buildTradeValues(formData: FormData) {
     pnl: round2(pnl),
     pnlOverridden,
     rMultiple,
-    playbookId: num(formData.get('playbookId')),
-    brokenRuleIds: numList(formData, 'brokenRuleIds'),
-    followedRuleIds: numList(formData, 'followedRuleIds'),
-    mistakeTags: strList(formData, 'mistakeTags'),
-    hidden: bool(formData.get('hidden')),
-    notes: str(formData.get('notes')),
   };
 }
 
@@ -113,7 +178,7 @@ export async function updateTrade(_prev: FormState, formData: FormData): Promise
   if (!existing) return { error: 'Trade not found.' };
   let values;
   try {
-    values = await buildTradeValues(formData);
+    values = await buildTradeValues(formData, existing);
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Could not save the trade.' };
   }
@@ -122,6 +187,11 @@ export async function updateTrade(_prev: FormState, formData: FormData): Promise
   await recomputeAccountDays(values.accountId, [values.tradeDate, existing.tradeDate]);
   revalidatePath('/', 'layout');
   return { ok: true, message: 'Trade updated.' };
+}
+
+export async function saveTradeEntryMode(mode: 'quick' | 'detailed') {
+  if (mode !== 'quick' && mode !== 'detailed') return;
+  await db.update(settings).set({ tradeEntryMode: mode, updatedAt: new Date() }).where(eq(settings.id, 1));
 }
 
 export async function deleteTrade(formData: FormData) {

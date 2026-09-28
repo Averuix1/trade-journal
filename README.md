@@ -17,7 +17,7 @@ and has no kill switch, no sharing, no community, no AI and no billing.
 | **Calendar** | Month or week grid of green/red day tiles with a weekly totals column, filters for session, in/outside system and $/R, monthly summary cards, a daily log table, and a day side panel with the intraday curve, screenshots, trades and the day journal. |
 | **Stats** | Win %, trade and day profit factor, day and trade streaks, plus process stats: rules followed vs broken, reasons by cost, weekday rule-breaks, and results by mood, sleep, grade and checklist. |
 | **Tank** | How many contracts for a given stop size and risk, and how many full-risk losses you have left before the drawdown cut-off (prop) or a zero balance (personal). |
-| **Trades** | Filterable list with a fast add/edit form. P&L, fees and R are calculated for you and can be overridden. |
+| **Trades** | Filterable list. Quick entry (date, session, dollars, win/loss/breakeven/partial) is the default; the price form is one click away and the choice is remembered. |
 | **Money** | Per-account ledger (eval/reset/activation/monthly/data fees, payouts, deposits, withdrawals) plus a prop-house roll-up: total fees, payouts, net, cost per pass, cost per payout, eval vs funded tape and return on spend. |
 | **Playbooks** | Your own setups, each with its own rules checklist, plus per-rule follow rate and P&L. |
 | **Import** | CSV import from TopstepX, Tradovate and a Google Sheets journal export, with a preview, duplicate detection and undo. Also JSON backup and restore. |
