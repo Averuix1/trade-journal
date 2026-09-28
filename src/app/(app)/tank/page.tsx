@@ -22,11 +22,14 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, instruments] = await Promise.all([getSettings(), getInstruments()]);
   const account = scope.account ?? scope.accounts[0];
-  const money = await getAccountMoney([account]);
-  const trades = await getTrades({ accountIds: [account.id] });
-  const ledger = await getLedger([account.id]);
+  const [config, instruments, money, trades, ledger] = await Promise.all([
+    getSettings(),
+    getInstruments(),
+    getAccountMoney(scope.accounts),
+    getTrades({ accountIds: [account.id] }),
+    getLedger([account.id]),
+  ]);
   const today = todayKey('America/New_York');
 
   const risk = Number(one(params.risk) ?? account.riskPerTrade) || account.riskPerTrade;

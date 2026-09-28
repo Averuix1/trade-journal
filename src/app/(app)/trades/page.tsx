@@ -32,15 +32,6 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, sessions, instruments, playbooks, playbookRules, mistakeTags] = await Promise.all([
-    getSettings(),
-    getSessionDefs(),
-    getInstruments(),
-    getPlaybooks(),
-    getPlaybookRules(),
-    getMistakeTags(),
-  ]);
-
   const from = one(params.from);
   const to = one(params.to);
   const sessionFilter = one(params.session) ?? 'all';
@@ -49,7 +40,16 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
   const showNew = one(params.new) === '1';
   const editId = Number(one(params.edit) ?? 0);
 
-  const all = await getTrades({ accountIds: scope.accountIds, from, to, includeHidden: true });
+  const [config, sessions, instruments, playbooks, playbookRules, mistakeTags, all, hiddenDays] = await Promise.all([
+    getSettings(),
+    getSessionDefs(),
+    getInstruments(),
+    getPlaybooks(),
+    getPlaybookRules(),
+    getMistakeTags(),
+    getTrades({ accountIds: scope.accountIds, from, to, includeHidden: true }),
+    getHiddenDays(scope.accountIds),
+  ]);
   const trades = all
     .filter((t) => {
       if (sessionFilter !== 'all' && t.sessionKey !== sessionFilter) return false;
@@ -61,7 +61,6 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
     .sort((a, b) => b.openedAt.getTime() - a.openedAt.getTime());
 
   // The table lists everything; the summary cards match the rest of the app and skip hidden days.
-  const hiddenDays = await getHiddenDays(scope.accountIds);
   const isHidden = (t: (typeof trades)[number]) => t.hidden || hiddenDays.has(`${t.accountId}|${t.tradeDate}`);
   const stats = computeStats(trades.filter((t) => !isHidden(t)), config.beBandR);
   const editing = editId ? all.find((t) => t.id === editId) : undefined;

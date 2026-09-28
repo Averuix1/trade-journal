@@ -11,8 +11,7 @@ export default async function ImportPage() {
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const config = await getSettings();
-  const batches = await getImports(scope.accounts.map((a) => a.id));
+  const [config, batches] = await Promise.all([getSettings(), getImports(scope.accounts.map((a) => a.id))]);
 
   return (
     <div className="space-y-5">

@@ -11,6 +11,13 @@ export function databaseUrl(): string | undefined {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
 }
 
+/** Rewrite `@ep-…` to `@ep-…-pooler` so Neon serves the connection from its pooler. */
+function pooledNeonUrl(connectionString: string): string {
+  return connectionString.replace(/(@ep-[^.]+)/i, (endpoint) =>
+    endpoint.endsWith('-pooler') ? endpoint : `${endpoint}-pooler`,
+  );
+}
+
 function createDb(): Db {
   const connectionString = databaseUrl();
   if (!connectionString) {
@@ -19,8 +26,11 @@ function createDb(): Db {
     );
   }
   if (/neon\.tech|neon\.build/.test(connectionString)) {
+    // HTTP fetch against the pooled host. Pool.query skips the WebSocket handshake,
+    // so a serverless function does not pay to open a connection on every request.
+    neonConfig.poolQueryViaFetch = true;
     if (!globalThis.WebSocket) neonConfig.webSocketConstructor = ws;
-    return drizzleNeon(new Pool({ connectionString }), { schema }) as unknown as Db;
+    return drizzleNeon(new Pool({ connectionString: pooledNeonUrl(connectionString) }), { schema }) as unknown as Db;
   }
   const client = postgres(connectionString, { max: 5, prepare: false });
   return drizzlePostgres(client, { schema });

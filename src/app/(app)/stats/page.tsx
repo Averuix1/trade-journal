@@ -75,22 +75,23 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, sessions, playbooks, tags] = await Promise.all([
+  const from = one(params.from);
+  const to = one(params.to);
+  const [config, sessions, playbooks, tags, raw, journals] = await Promise.all([
     getSettings(),
     getSessionDefs(),
     getPlaybooks(),
     getMistakeTags(),
+    getTrades({ accountIds: scope.accountIds, from, to }),
+    getJournals(scope.accountIds, from, to),
   ]);
 
-  const from = one(params.from);
-  const to = one(params.to);
   const stage = one(params.stage) ?? 'all';
   const sessionFilter = one(params.session) ?? 'all';
   const direction = one(params.direction) ?? 'all';
   const systemFilter = one(params.system) ?? 'all';
 
   const accountById = new Map(scope.accounts.map((a) => [a.id, a]));
-  const raw = await getTrades({ accountIds: scope.accountIds, from, to });
   const trades = raw.filter((t) => {
     const account = accountById.get(t.accountId);
     if (stage === 'eval' && account?.stage !== 'EVAL') return false;
@@ -110,7 +111,6 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
   const dayStreak = streaks(days);
   const tradeStreak = tradeStreaks(trades, config.beBandR);
   const dayPf = dayProfitFactor(days);
-  const journals = await getJournals(scope.accountIds, from, to);
   type ProcessDay = {
     date: string;
     pnl: number;

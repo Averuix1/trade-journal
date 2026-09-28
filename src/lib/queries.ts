@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
@@ -45,13 +46,19 @@ export function ensureBootstrapped(): Promise<void> {
 }
 
 async function runBootstrap(): Promise<void> {
-  await db
-    .insert(settings)
-    .values({ id: 1 })
-    .onConflictDoNothing();
-  await db.insert(instruments).values(DEFAULT_INSTRUMENTS).onConflictDoNothing();
-  await db.insert(sessionDefs).values(DEFAULT_SESSIONS).onConflictDoNothing();
-  const existingTags = await db.select({ id: mistakeTags.id, name: mistakeTags.name }).from(mistakeTags).orderBy(asc(mistakeTags.id));
+  await Promise.all([
+    db.insert(settings).values({ id: 1 }).onConflictDoNothing(),
+    db.insert(instruments).values(DEFAULT_INSTRUMENTS).onConflictDoNothing(),
+    db.insert(sessionDefs).values(DEFAULT_SESSIONS).onConflictDoNothing(),
+  ]);
+
+  const [existingTags, specs, sessionRows, configRows] = await Promise.all([
+    db.select({ id: mistakeTags.id, name: mistakeTags.name }).from(mistakeTags).orderBy(asc(mistakeTags.id)),
+    db.select().from(instruments),
+    db.select().from(sessionDefs),
+    db.select().from(settings).where(eq(settings.id, 1)),
+  ]);
+
   const seen = new Set<string>();
   const duplicateIds: number[] = [];
   for (const tag of existingTags) {
@@ -59,41 +66,43 @@ async function runBootstrap(): Promise<void> {
     if (seen.has(key)) duplicateIds.push(tag.id);
     else seen.add(key);
   }
-  if (duplicateIds.length) await db.delete(mistakeTags).where(inArray(mistakeTags.id, duplicateIds));
   const missing = DEFAULT_MISTAKE_TAGS.filter((name) => !seen.has(name.toLowerCase()));
+  const config = configRows[0];
+  const writes: Promise<unknown>[] = [];
+  if (duplicateIds.length) writes.push(db.delete(mistakeTags).where(inArray(mistakeTags.id, duplicateIds)));
   if (missing.length) {
-    await db
-      .insert(mistakeTags)
-      .values(missing.map((name, i) => ({ name, sortOrder: existingTags.length + i })))
-      .onConflictDoNothing();
+    writes.push(
+      db
+        .insert(mistakeTags)
+        .values(missing.map((name, i) => ({ name, sortOrder: existingTags.length + i })))
+        .onConflictDoNothing(),
+    );
   }
-
-  const specs = await db.select().from(instruments);
   for (const spec of specs) {
     const seeded = SEEDED_INSTRUMENT_ALIASES[spec.symbol];
     if (seeded && (!spec.aliases || spec.aliases.length === 0)) {
-      await db.update(instruments).set({ aliases: seeded }).where(eq(instruments.symbol, spec.symbol));
+      writes.push(db.update(instruments).set({ aliases: seeded }).where(eq(instruments.symbol, spec.symbol)));
     }
   }
-
-  const sessions = await db.select().from(sessionDefs);
-  for (const session of sessions) {
+  for (const session of sessionRows) {
     const aliases = DEFAULT_SESSION_ALIASES[session.key];
     if (aliases && (!session.aliases || session.aliases.length === 0)) {
-      await db.update(sessionDefs).set({ aliases }).where(eq(sessionDefs.key, session.key));
+      writes.push(db.update(sessionDefs).set({ aliases }).where(eq(sessionDefs.key, session.key)));
     }
   }
-
-  const [config] = await db.select().from(settings).where(eq(settings.id, 1));
   if (config && (!config.checklistItems || config.checklistItems.length === 0)) {
-    await db
-      .update(settings)
-      .set({ checklistItems: DEFAULT_CHECKLIST, checklistSkipIfNo: 2 })
-      .where(eq(settings.id, 1));
+    writes.push(
+      db.update(settings).set({ checklistItems: DEFAULT_CHECKLIST, checklistSkipIfNo: 2 }).where(eq(settings.id, 1)),
+    );
   }
+  if (writes.length) await Promise.all(writes);
 }
 
-export async function getSettings() {
+function idKey(ids: number[]): string {
+  return [...ids].sort((a, b) => a - b).join(',');
+}
+
+export const getSettings = cache(async () => {
   await ensureBootstrapped();
   const [row] = await db.select().from(settings).where(eq(settings.id, 1));
   return (
@@ -110,40 +119,40 @@ export async function getSettings() {
       updatedAt: new Date(),
     }
   );
-}
+});
 
-export async function getAccounts(): Promise<Account[]> {
+export const getAccounts = cache(async (): Promise<Account[]> => {
   await ensureBootstrapped();
   return db.select().from(accounts).orderBy(asc(accounts.sortOrder), asc(accounts.id));
-}
+});
 
 export async function getAccount(id: number): Promise<Account | undefined> {
-  const [row] = await db.select().from(accounts).where(eq(accounts.id, id));
-  return row;
+  const all = await getAccounts();
+  return all.find((account) => account.id === id);
 }
 
-export async function getSessionDefs() {
+export const getSessionDefs = cache(async () => {
   await ensureBootstrapped();
   return db.select().from(sessionDefs).orderBy(asc(sessionDefs.sortOrder));
-}
+});
 
-export async function getInstruments() {
+export const getInstruments = cache(async () => {
   await ensureBootstrapped();
   return db.select().from(instruments).orderBy(asc(instruments.sortOrder), asc(instruments.symbol));
-}
+});
 
-export async function getPlaybooks() {
+export const getPlaybooks = cache(async () => {
   return db.select().from(playbooks).orderBy(asc(playbooks.id));
-}
+});
 
-export async function getPlaybookRules() {
+export const getPlaybookRules = cache(async () => {
   return db.select().from(playbookRules).orderBy(asc(playbookRules.sortOrder), asc(playbookRules.id));
-}
+});
 
-export async function getMistakeTags() {
+export const getMistakeTags = cache(async () => {
   await ensureBootstrapped();
   return db.select().from(mistakeTags).orderBy(asc(mistakeTags.sortOrder), asc(mistakeTags.id));
-}
+});
 
 /** Which account the header dropdown currently points at. `null` means "All accounts". */
 export async function getSelectedAccountId(all: Account[]): Promise<number | null> {
@@ -163,7 +172,7 @@ export type Scope = {
   isAll: boolean;
 };
 
-export async function getScope(): Promise<Scope> {
+export const getScope = cache(async (): Promise<Scope> => {
   const all = await getAccounts();
   const selected = await getSelectedAccountId(all);
   const account = selected == null ? null : (all.find((a) => a.id === selected) ?? null);
@@ -173,7 +182,7 @@ export async function getScope(): Promise<Scope> {
     accountIds: account ? [account.id] : all.map((a) => a.id),
     isAll: account == null,
   };
-}
+});
 
 export type TradeFilter = {
   accountIds: number[];
@@ -182,45 +191,61 @@ export type TradeFilter = {
   includeHidden?: boolean;
 };
 
-export async function getTrades(filter: TradeFilter): Promise<Trade[]> {
-  if (!filter.accountIds.length) return [];
-  const where = [inArray(trades.accountId, filter.accountIds)];
-  if (filter.from) where.push(gte(trades.tradeDate, filter.from));
-  if (filter.to) where.push(lte(trades.tradeDate, filter.to));
-  if (!filter.includeHidden) where.push(eq(trades.hidden, false));
-  const rows = await db
-    .select()
-    .from(trades)
-    .where(and(...where))
-    .orderBy(asc(trades.openedAt));
-  if (filter.includeHidden) return rows;
-  const hidden = await getHiddenDays(filter.accountIds);
+const loadTrades = cache(async (key: string): Promise<Trade[]> => {
+  const parsed = JSON.parse(key) as { ids: string; from: string; to: string; includeHidden: boolean };
+  const accountIds = parsed.ids ? parsed.ids.split(',').map(Number) : [];
+  if (!accountIds.length) return [];
+  const where = [inArray(trades.accountId, accountIds)];
+  if (parsed.from) where.push(gte(trades.tradeDate, parsed.from));
+  if (parsed.to) where.push(lte(trades.tradeDate, parsed.to));
+  if (!parsed.includeHidden) where.push(eq(trades.hidden, false));
+  const rowsPromise = db.select().from(trades).where(and(...where)).orderBy(asc(trades.openedAt));
+  if (parsed.includeHidden) return rowsPromise;
+  const [rows, hidden] = await Promise.all([rowsPromise, getHiddenDays(accountIds)]);
   return rows.filter((t) => !hidden.has(`${t.accountId}|${t.tradeDate}`));
+});
+
+export function getTrades(filter: TradeFilter): Promise<Trade[]> {
+  return loadTrades(
+    JSON.stringify({
+      ids: idKey(filter.accountIds),
+      from: filter.from ?? '',
+      to: filter.to ?? '',
+      includeHidden: Boolean(filter.includeHidden),
+    }),
+  );
 }
 
-export async function getHiddenDays(accountIds: number[]): Promise<Set<string>> {
-  if (!accountIds.length) return new Set();
+const loadHiddenDays = cache(async (key: string): Promise<Set<string>> => {
+  if (!key) return new Set();
+  const accountIds = key.split(',').map(Number);
   const rows = await db
     .select({ accountId: dayJournals.accountId, date: dayJournals.date })
     .from(dayJournals)
     .where(and(inArray(dayJournals.accountId, accountIds), eq(dayJournals.hidden, true)));
   return new Set(rows.map((r) => `${r.accountId}|${r.date}`));
+});
+
+export function getHiddenDays(accountIds: number[]): Promise<Set<string>> {
+  return loadHiddenDays(idKey(accountIds));
 }
 
 export async function getHiddenDayCount(accountIds: number[]): Promise<number> {
   return (await getHiddenDays(accountIds)).size;
 }
 
-export async function getJournals(accountIds: number[], from?: string, to?: string): Promise<DayJournal[]> {
+const loadJournals = cache(async (key: string): Promise<DayJournal[]> => {
+  const parsed = JSON.parse(key) as { ids: string; from: string; to: string };
+  const accountIds = parsed.ids ? parsed.ids.split(',').map(Number) : [];
   if (!accountIds.length) return [];
   const where = [inArray(dayJournals.accountId, accountIds)];
-  if (from) where.push(gte(dayJournals.date, from));
-  if (to) where.push(lte(dayJournals.date, to));
-  return db
-    .select()
-    .from(dayJournals)
-    .where(and(...where))
-    .orderBy(asc(dayJournals.date));
+  if (parsed.from) where.push(gte(dayJournals.date, parsed.from));
+  if (parsed.to) where.push(lte(dayJournals.date, parsed.to));
+  return db.select().from(dayJournals).where(and(...where)).orderBy(asc(dayJournals.date));
+});
+
+export function getJournals(accountIds: number[], from?: string, to?: string): Promise<DayJournal[]> {
+  return loadJournals(JSON.stringify({ ids: idKey(accountIds), from: from ?? '', to: to ?? '' }));
 }
 
 export async function getJournal(accountId: number, date: string): Promise<DayJournal | undefined> {
@@ -231,13 +256,18 @@ export async function getJournal(accountId: number, date: string): Promise<DayJo
   return row;
 }
 
-export async function getLedger(accountIds: number[]) {
-  if (!accountIds.length) return [];
+const loadLedger = cache(async (key: string) => {
+  if (!key) return [];
+  const accountIds = key.split(',').map(Number);
   return db
     .select()
     .from(ledgerEntries)
     .where(inArray(ledgerEntries.accountId, accountIds))
     .orderBy(desc(ledgerEntries.date), desc(ledgerEntries.id));
+});
+
+export function getLedger(accountIds: number[]) {
+  return loadLedger(idKey(accountIds));
 }
 
 export async function getScreenshots(accountIds: number[], date?: string) {
@@ -259,9 +289,14 @@ export async function getScreenshots(accountIds: number[], date?: string) {
     .orderBy(desc(screenshots.id));
 }
 
-export async function getImports(accountIds: number[]) {
-  if (!accountIds.length) return [];
+const loadImports = cache(async (key: string) => {
+  if (!key) return [];
+  const accountIds = key.split(',').map(Number);
   return db.select().from(imports).where(inArray(imports.accountId, accountIds)).orderBy(desc(imports.id));
+});
+
+export function getImports(accountIds: number[]) {
+  return loadImports(idKey(accountIds));
 }
 
 export type AccountMoney = {
@@ -276,8 +311,9 @@ export type AccountMoney = {
   netOnSpend: number;
 };
 
-export async function getAccountMoney(list: Account[]): Promise<Map<number, AccountMoney>> {
-  const ids = list.map((a) => a.id);
+const loadAccountMoney = cache(async (key: string): Promise<Map<number, AccountMoney>> => {
+  const ids = key ? key.split(',').map(Number) : [];
+  const list = (await getAccounts()).filter((account) => ids.includes(account.id));
   const result = new Map<number, AccountMoney>();
   for (const a of list) {
     result.set(a.id, {
@@ -301,25 +337,26 @@ export async function getAccountMoney(list: Account[]): Promise<Map<number, Acco
       and ${dayJournals.hidden}
   )`;
 
-  const pnlRows = await db
-    .select({ accountId: trades.accountId, total: sql<number>`coalesce(sum(${trades.pnl}), 0)` })
-    .from(trades)
-    .where(and(inArray(trades.accountId, ids), eq(trades.hidden, false), notOnAHiddenDay))
-    .groupBy(trades.accountId);
+  const [pnlRows, ledgerRows] = await Promise.all([
+    db
+      .select({ accountId: trades.accountId, total: sql<number>`coalesce(sum(${trades.pnl}), 0)` })
+      .from(trades)
+      .where(and(inArray(trades.accountId, ids), eq(trades.hidden, false), notOnAHiddenDay))
+      .groupBy(trades.accountId),
+    db
+      .select({
+        accountId: ledgerEntries.accountId,
+        kind: ledgerEntries.kind,
+        total: sql<number>`coalesce(sum(${ledgerEntries.amount}), 0)`,
+      })
+      .from(ledgerEntries)
+      .where(inArray(ledgerEntries.accountId, ids))
+      .groupBy(ledgerEntries.accountId, ledgerEntries.kind),
+  ]);
   for (const row of pnlRows) {
     const m = result.get(row.accountId);
     if (m) m.netPnl = Number(row.total);
   }
-
-  const ledgerRows = await db
-    .select({
-      accountId: ledgerEntries.accountId,
-      kind: ledgerEntries.kind,
-      total: sql<number>`coalesce(sum(${ledgerEntries.amount}), 0)`,
-    })
-    .from(ledgerEntries)
-    .where(inArray(ledgerEntries.accountId, ids))
-    .groupBy(ledgerEntries.accountId, ledgerEntries.kind);
   for (const row of ledgerRows) {
     const m = result.get(row.accountId);
     if (!m) continue;
@@ -341,6 +378,10 @@ export async function getAccountMoney(list: Account[]): Promise<Map<number, Acco
     }
   }
   return result;
+});
+
+export function getAccountMoney(list: Account[]): Promise<Map<number, AccountMoney>> {
+  return loadAccountMoney(idKey(list.map((account) => account.id)));
 }
 
 export function groupAccounts(list: Account[]) {

@@ -39,7 +39,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, sessions, tags] = await Promise.all([getSettings(), getSessionDefs(), getMistakeTags()]);
   const today = todayKey('America/New_York');
   const month = one(params.month) ?? today.slice(0, 7);
   const view = one(params.view) === 'week' ? 'week' : 'month';
@@ -55,10 +54,23 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const rangeFrom = view === 'week' ? weekAnchor : monthStart;
   const rangeTo = view === 'week' ? addDays(weekAnchor, 6) : monthEnd;
 
-  const allTrades = await getTrades({ accountIds: scope.accountIds, from: rangeFrom, to: rangeTo, includeHidden: true });
-  const hiddenDayKeys = await getHiddenDays(scope.accountIds);
+  const panelAccountId = scope.account?.id ?? scope.accountIds[0];
+  const dayInRange = Boolean(selectedDay && selectedDay >= rangeFrom && selectedDay <= rangeTo);
+  const [config, sessions, tags, allTrades, hiddenDayKeys, journals, shots] = await Promise.all([
+    getSettings(),
+    getSessionDefs(),
+    getMistakeTags(),
+    getTrades({ accountIds: scope.accountIds, from: rangeFrom, to: rangeTo, includeHidden: true }),
+    getHiddenDays(scope.accountIds),
+    getJournals(scope.accountIds, rangeFrom, rangeTo),
+    selectedDay ? getScreenshots(scope.accountIds, selectedDay) : Promise.resolve([]),
+  ]);
   const hiddenDates = new Set([...hiddenDayKeys].map((k) => k.split('|')[1]));
-  const journals = await getJournals(scope.accountIds, rangeFrom, rangeTo);
+  const selectedJournal = !selectedDay
+    ? undefined
+    : dayInRange
+      ? journals.find((journal) => journal.accountId === panelAccountId && journal.date === selectedDay)
+      : await getJournal(panelAccountId, selectedDay);
 
   const filtered = allTrades.filter((t) => {
     if (t.hidden) return false;
@@ -114,7 +126,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
     return s ? `/calendar?${s}` : '/calendar';
   };
 
-  const panelAccountId = scope.account?.id ?? scope.accountIds[0];
   const panelData = selectedDay
     ? {
         date: selectedDay,
@@ -122,8 +133,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
         trades: allTrades
           .filter((t) => t.tradeDate === selectedDay && !t.hidden)
           .sort((a, b) => a.openedAt.getTime() - b.openedAt.getTime()),
-        journal: await getJournal(panelAccountId, selectedDay),
-        screenshots: await getScreenshots(scope.accountIds, selectedDay),
+        journal: selectedJournal,
+        screenshots: shots,
         sessions,
         timezone: config.timezone,
         closeHref: qs({ day: undefined }),

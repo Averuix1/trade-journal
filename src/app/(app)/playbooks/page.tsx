@@ -9,8 +9,12 @@ export const metadata = { title: 'Playbooks — Trade Journal' };
 
 export default async function PlaybooksPage() {
   const scope = await getScope();
-  const [config, playbooks, rules] = await Promise.all([getSettings(), getPlaybooks(), getPlaybookRules()]);
-  const trades = scope.accountIds.length ? await getTrades({ accountIds: scope.accountIds }) : [];
+  const [config, playbooks, rules, trades] = await Promise.all([
+    getSettings(),
+    getPlaybooks(),
+    getPlaybookRules(),
+    scope.accountIds.length ? getTrades({ accountIds: scope.accountIds }) : Promise.resolve([]),
+  ]);
 
   return (
     <div className="space-y-5">

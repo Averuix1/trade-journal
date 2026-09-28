@@ -69,6 +69,25 @@ database and file storage are both created from inside Vercel.
    screenshots go. Vercel sets `BLOB_READ_WRITE_TOKEN` automatically.
    *This one is optional* — without it, screenshots are stored in the database instead (up to 4 MB each).
 
+### Function region
+
+Functions are pinned in `vercel.json`. The only value to change is the region code:
+
+```json
+{ "regions": ["iad1"] }
+```
+
+`iad1` is the default (US East, Washington, D.C.). JSON files cannot hold comments, so this section is the comment for that line: edit the one string, save, and redeploy.
+
+Find the Neon region in Vercel: open the project, go to **Storage**, and open the Neon database. The region is on that page, written as an AWS name such as `aws-us-east-1` or `aws-ap-southeast-2`. Use the matching Vercel code:
+
+| Neon region (Storage) | Value in `vercel.json` |
+| --- | --- |
+| `aws-us-east-1` | `iad1` |
+| `aws-ap-southeast-2` | `syd1` |
+
+If Storage shows `aws-ap-southeast-2`, change `iad1` to `syd1`. That puts the functions next to a Sydney database. Leave it as `iad1` while Neon is in `aws-us-east-1`.
+
 ### 3. Add your password
 
 Go to **Settings → Environment Variables** and add two variables, for all environments:

@@ -18,12 +18,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [scope, config, sessions] = await Promise.all([getScope(), getSettings(), getSessionDefs()]);
-  const money = await getAccountMoney(scope.accounts);
-  const hiddenDays = await getHiddenDayCount(scope.accountIds);
   const today = todayKey('America/New_York');
-  const todayTrades = scope.accountIds.length
-    ? await getTrades({ accountIds: scope.accountIds, from: today, to: today })
-    : [];
+  const [money, hiddenDays, todayTrades] = await Promise.all([
+    getAccountMoney(scope.accounts),
+    getHiddenDayCount(scope.accountIds),
+    scope.accountIds.length
+      ? getTrades({ accountIds: scope.accountIds, from: today, to: today })
+      : Promise.resolve([]),
+  ]);
 
   const balance = scope.account
     ? (money.get(scope.account.id)?.balance ?? 0)
@@ -41,7 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-line bg-ink-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-          <Link href="/" className="mr-1 text-sm font-black tracking-[0.2em] text-mint-300">
+          <Link href="/" prefetch className="mr-1 text-sm font-black tracking-[0.2em] text-mint-300">
             TJ
           </Link>
           <AccountSwitcher groups={groupAccounts(scope.accounts)} current={scope.account} />

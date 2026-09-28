@@ -13,16 +13,17 @@ export default async function MoneyPage() {
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const config = await getSettings();
-  const money = await getAccountMoney(scope.accounts);
-  const ledgerAccountIds = scope.account ? [scope.account.id] : scope.accountIds;
-  const ledger = await getLedger(ledgerAccountIds);
-  // The prop-house roll-up always spans every account, whatever the header dropdown says.
-  const trades = await getTrades({ accountIds: scope.accounts.map((a) => a.id) });
+  const accountIds = scope.accounts.map((a) => a.id);
+  const [config, money, allLedger, trades] = await Promise.all([
+    getSettings(),
+    getAccountMoney(scope.accounts),
+    getLedger(accountIds),
+    getTrades({ accountIds }),
+  ]);
+  const ledger = scope.account ? allLedger.filter((entry) => entry.accountId === scope.account!.id) : allLedger;
 
   const propAccounts = scope.accounts.filter((a) => a.type === 'PROP');
   const propIds = new Set(propAccounts.map((a) => a.id));
-  const allLedger = await getLedger(scope.accounts.map((a) => a.id));
   const propLedger = allLedger.filter((l) => propIds.has(l.accountId));
 
   const totalFees = propLedger.filter((l) => FEE_KINDS.includes(l.kind)).reduce((s, l) => s + l.amount, 0);
