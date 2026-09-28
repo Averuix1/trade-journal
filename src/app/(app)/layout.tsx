@@ -59,8 +59,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 hiding {hiddenDays} day{hiddenDays === 1 ? '' : 's'}
               </Link>
             )}
-            <span className="tabular">balance {fmtMoney(balance)}</span>
-            {counters.length > 0 && <span className="tabular hidden sm:inline">{counters.join(' · ')}</span>}
+            {scope.accounts.length > 0 && <span className="tabular">balance {fmtMoney(balance)}</span>}
+            {scope.accounts.length > 0 && counters.length > 0 && (
+              <span className="tabular hidden sm:inline">{counters.join(' · ')}</span>
+            )}
             <form action={logout}>
               <button className="btn btn-sm btn-ghost" type="submit">
                 Sign out
