@@ -126,6 +126,7 @@ Other scripts:
 | `npm run lint` | ESLint. |
 | `npm run db:generate` | Regenerate SQL migrations after editing `src/lib/db/schema.ts`. |
 | `npm run db:migrate` | Apply pending migrations. |
+| `npm run verify` | End-to-end smoke test (needs a running server and `npx playwright install chromium`). Signs in, walks every page, logs a trade, saves a journal entry, hides and unhides a day, imports and undoes a CSV, and writes screenshots to `/opt/cursor/artifacts`. |
 
 ---
 

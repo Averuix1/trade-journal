@@ -33,6 +33,14 @@ export const BREAK_LABELS: Record<string, string> = {
   MISTAKE: 'Mistake tagged',
 };
 
+/** Compact versions for tight table cells. */
+export const BREAK_SHORT: Record<string, string> = {
+  DUMP: 'Dump',
+  OUTSIDE: 'Late',
+  RULE: 'Rule',
+  MISTAKE: 'Mistake',
+};
+
 export const BREAK_DESCRIPTIONS: Record<string, string> = {
   DUMP: 'Over the session cap',
   OUTSIDE: 'Entry outside the session or entry window',

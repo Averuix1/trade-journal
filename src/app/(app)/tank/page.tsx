@@ -175,8 +175,10 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
                         </td>
                       );
                     })}
-                    <td className="text-right text-dim">{fmtMoney(actualRisk)}</td>
-                    <td className="text-right font-medium text-[#e6fff5]">{left}</td>
+                    <td className="text-right text-dim">{chosen > 0 ? fmtMoney(actualRisk) : '—'}</td>
+                    <td className="text-right font-medium text-[#e6fff5]">
+                      {chosen > 0 ? left : <span className="text-dim/60">too big for this risk</span>}
+                    </td>
                   </tr>
                 );
               })}

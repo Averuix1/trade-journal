@@ -9,7 +9,7 @@ import { toggleDayHidden } from '@/lib/actions/journal';
 import { deleteScreenshot } from '@/lib/actions/trades';
 import { fmtHold, fmtR } from '@/lib/format';
 import { formatDayLong, formatTime } from '@/lib/time';
-import { BREAK_LABELS } from '@/lib/defaults';
+import { BREAK_SHORT } from '@/lib/defaults';
 import { screenshotSrc } from '@/lib/blob';
 
 export type DayPanelData = {
@@ -41,7 +41,7 @@ export function DayPanel({ data }: { data: DayPanelData }) {
   ];
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-40 flex w-full max-w-xl flex-col border-l border-line bg-ink-950 shadow-2xl shadow-black/70">
+    <aside className="fixed inset-y-0 right-0 z-40 flex w-full max-w-2xl flex-col border-l border-line bg-ink-950 shadow-2xl shadow-black/70">
       <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
         <div>
           <div className="text-sm font-medium text-[#eafff7]">{formatDayLong(data.date)}</div>
@@ -84,7 +84,8 @@ export function DayPanel({ data }: { data: DayPanelData }) {
               <table className="tabular">
                 <thead>
                   <tr>
-                    <th className="py-1">Slot</th>
+                    <th>Session</th>
+                    <th>Slot</th>
                     <th>Instr.</th>
                     <th>Side</th>
                     <th className="text-right">Entry</th>
@@ -98,20 +99,23 @@ export function DayPanel({ data }: { data: DayPanelData }) {
                 <tbody className="divide-rows">
                   {data.trades.map((t) => (
                     <tr key={t.id}>
-                      <td className="py-1.5">{t.slot ?? '—'}</td>
+                      <td className="whitespace-nowrap text-dim">
+                        {data.sessions.find((s) => s.key === t.sessionKey)?.shortName ?? '—'}
+                      </td>
+                      <td>{t.slot ?? '—'}</td>
                       <td>{t.symbol}</td>
                       <td className="text-dim">{t.side === 'LONG' ? 'L' : 'S'}</td>
-                      <td className="text-right text-dim">{t.entryPrice ?? '—'}</td>
-                      <td className="text-right text-dim">{t.exitPrice ?? '—'}</td>
-                      <td className="text-right text-dim">
+                      <td className="whitespace-nowrap text-right text-dim">{t.entryPrice ?? '—'}</td>
+                      <td className="whitespace-nowrap text-right text-dim">{t.exitPrice ?? '—'}</td>
+                      <td className="whitespace-nowrap text-right text-dim">
                         {fmtHold(t.closedAt ? (t.closedAt.getTime() - t.openedAt.getTime()) / 60000 : null)}
                       </td>
                       <td className="text-right">
                         <MoneyText value={t.pnl} />
                       </td>
                       <td className="text-right text-dim">{fmtR(t.rMultiple)}</td>
-                      <td className="text-[10px] uppercase text-dim">
-                        {t.inSystem ? 'In' : t.breaks.map((b) => BREAK_LABELS[b] ?? b).join(', ')}
+                      <td className="whitespace-nowrap text-[10px] uppercase text-dim">
+                        {t.inSystem ? 'In' : t.breaks.map((b) => BREAK_SHORT[b] ?? b).join(' · ')}
                       </td>
                     </tr>
                   ))}

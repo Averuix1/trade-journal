@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Dropdown } from '@/components/dropdown';
 
 const PRIMARY = [
   { href: '/', label: 'Desk' },
@@ -24,47 +25,43 @@ function isActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname.startsWith(href);
 }
 
+const tabClass = (active: boolean) =>
+  `whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+    active
+      ? 'bg-mint-500/15 text-mint-200 ring-1 ring-inset ring-mint-500/40'
+      : 'text-dim hover:bg-ink-800 hover:text-[#cdefe2]'
+  }`;
+
 export function Nav() {
   const pathname = usePathname();
   const moreActive = MORE.some((item) => isActive(pathname, item.href));
 
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+    <nav className="flex flex-wrap items-center gap-1">
       {PRIMARY.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-            isActive(pathname, item.href)
-              ? 'bg-mint-500/15 text-mint-200 ring-1 ring-inset ring-mint-500/40'
-              : 'text-dim hover:bg-ink-800 hover:text-[#cdefe2]'
-          }`}
-        >
+        <Link key={item.href} href={item.href} className={tabClass(isActive(pathname, item.href))}>
           {item.label}
         </Link>
       ))}
-      <details className="group relative">
-        <summary
-          className={`list-none whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-            moreActive ? 'bg-mint-500/15 text-mint-200 ring-1 ring-inset ring-mint-500/40' : 'text-dim hover:bg-ink-800'
-          } cursor-pointer`}
-        >
-          More
-        </summary>
-        <div className="absolute left-0 top-full z-40 mt-2 w-44 rounded-xl border border-line bg-ink-900 p-1 shadow-2xl shadow-black/60">
-          {MORE.map((item) => (
+      <Dropdown
+        menuClassName="left-0 w-44"
+        label={() => <span className={tabClass(moreActive)}>More</span>}
+      >
+        {(close) =>
+          MORE.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              onClick={close}
               className={`block rounded-lg px-3 py-2 text-sm ${
                 isActive(pathname, item.href) ? 'bg-mint-500/15 text-mint-200' : 'text-[#cdefe2] hover:bg-ink-800'
               }`}
             >
               {item.label}
             </Link>
-          ))}
-        </div>
-      </details>
+          ))
+        }
+      </Dropdown>
     </nav>
   );
 }

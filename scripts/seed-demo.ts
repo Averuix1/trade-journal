@@ -184,23 +184,31 @@ async function main() {
     ny_pm: [13 * 60, 30],
   };
 
-  type Plan = { account: typeof mainAccount; days: string[]; bias: number };
+  type Plan = {
+    account: typeof mainAccount;
+    days: string[];
+    /** Chance a trade is a winner. */
+    winRate: number;
+    /** Multiplier on the losing R, so a blown book gives more back than it risked. */
+    lossScale: number;
+    /** Chance the account trades a given session on a given day. */
+    activity: number;
+  };
   const plans: Plan[] = [
-    { account: evalAccount, days: weekdaysBack(45).slice(0, 14), bias: -0.12 },
-    { account: mainAccount, days: weekdaysBack(30), bias: 0.22 },
-    { account: personal, days: weekdaysBack(45).filter((_, i) => i % 3 === 0), bias: 0.1 },
+    { account: evalAccount, days: weekdaysBack(45).slice(0, 9), winRate: 0.25, lossScale: 1.3, activity: 0.4 },
+    { account: mainAccount, days: weekdaysBack(30), winRate: 0.47, lossScale: 1, activity: 0.31 },
+    { account: personal, days: weekdaysBack(45).filter((_, i) => i % 3 === 0), winRate: 0.48, lossScale: 1, activity: 0.6 },
   ];
 
   let totalTrades = 0;
   for (const plan of plans) {
     for (const date of plan.days) {
-      if (rand() < 0.25) continue;
-      const sessionsToday = (plan.account.activeSessions as string[]).filter(() => rand() < 0.65);
+      const sessionsToday = (plan.account.activeSessions as string[]).filter(() => rand() < plan.activity);
       if (!sessionsToday.length) continue;
 
       for (const sessionKey of sessionsToday) {
         const [startMinute, windowMins] = sessionTimes[sessionKey] ?? [9 * 60 + 30, 30];
-        const count = 1 + Math.floor(rand() * 3) + (rand() < 0.12 ? 1 : 0);
+        const count = 1 + Math.floor(rand() * 2) + (rand() < 0.14 ? 2 : 0);
         for (let i = 0; i < count; i += 1) {
           const late = i >= 3 || rand() < 0.1;
           const offset = late ? windowMins + 5 + Math.floor(rand() * 60) : Math.floor(rand() * windowMins);
@@ -208,16 +216,17 @@ async function main() {
           const openedAt = zonedInputToUtc(`${date}T${pad(Math.floor(minute / 60) % 24)}:${pad(minute % 60)}`, TZ);
           const closedAt = new Date(openedAt.getTime() + (3 + Math.floor(rand() * 40)) * 60000);
 
-          const symbol = rand() < 0.65 ? 'MNQ' : 'NQ';
+          const symbol = rand() < 0.85 ? 'MNQ' : 'NQ';
           const spec = DEFAULT_INSTRUMENTS.find((s) => s.symbol === symbol)!;
-          const contracts = symbol === 'MNQ' ? 4 + Math.floor(rand() * 6) : 1;
           const side = rand() < 0.55 ? 'LONG' : 'SHORT';
           const entry = round2(19800 + rand() * 900);
-          const stopPts = 20 + Math.floor(rand() * 16);
+          const stopPts = symbol === 'MNQ' ? 20 + Math.floor(rand() * 16) : 12 + Math.floor(rand() * 8);
+          // Size so a full stop costs roughly the account's risk per trade.
+          const contracts = Math.max(1, Math.round(plan.account.riskPerTrade / (stopPts * spec.pointValue)));
           const stop = side === 'LONG' ? round2(entry - stopPts) : round2(entry + stopPts);
 
-          const win = rand() < 0.52 + plan.bias * 0.4;
-          const rMove = win ? 0.7 + rand() * 2.1 : -(0.55 + rand() * 0.75);
+          const win = rand() < plan.winRate;
+          const rMove = win ? 0.8 + rand() * 1.4 : -(0.85 + rand() * 0.2) * plan.lossScale;
           const movePts = round2(stopPts * rMove);
           const exit = side === 'LONG' ? round2(entry + movePts) : round2(entry - movePts);
 

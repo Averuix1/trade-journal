@@ -84,13 +84,13 @@ export function InstrumentsForm({ instruments }: { instruments: Instrument[] }) 
                   <td>
                     <input name="name" defaultValue={i.name} className="w-full min-w-[10rem] text-xs" />
                   </td>
-                  <td>
+                  <td className="text-right">
                     <input name="pointValue" type="number" step="0.01" defaultValue={i.pointValue} className="w-24 text-right text-xs" />
                   </td>
-                  <td>
+                  <td className="text-right">
                     <input name="tickSize" type="number" step="0.01" defaultValue={i.tickSize} className="w-24 text-right text-xs" />
                   </td>
-                  <td>
+                  <td className="text-right">
                     <input name="commissionPerContract" type="number" step="0.01" defaultValue={i.commissionPerContract} className="w-28 text-right text-xs" />
                   </td>
                 </tr>
@@ -182,7 +182,7 @@ export function SessionsForm({ sessions }: { sessions: SessionDef[] }) {
                 <td>
                   <input name="end" type="time" defaultValue={minutesToClock(s.endMinute)} className="text-xs" />
                 </td>
-                <td>
+                <td className="text-right">
                   <input name="entryWindow" type="number" min={0} max={480} defaultValue={s.entryWindowMins} className="w-24 text-right text-xs" />
                 </td>
               </tr>

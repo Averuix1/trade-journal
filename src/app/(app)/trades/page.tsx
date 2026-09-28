@@ -4,6 +4,7 @@ import { NoAccounts } from '@/components/no-accounts';
 import { TradeForm } from '@/components/trade-form';
 import { deleteTrade, toggleTradeHidden } from '@/lib/actions/trades';
 import {
+  getHiddenDays,
   getInstruments,
   getMistakeTags,
   getPlaybookRules,
@@ -59,10 +60,10 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
     })
     .sort((a, b) => b.openedAt.getTime() - a.openedAt.getTime());
 
-  const stats = computeStats(
-    trades.filter((t) => !t.hidden),
-    config.beBandR,
-  );
+  // The table lists everything; the summary cards match the rest of the app and skip hidden days.
+  const hiddenDays = await getHiddenDays(scope.accountIds);
+  const isHidden = (t: (typeof trades)[number]) => t.hidden || hiddenDays.has(`${t.accountId}|${t.tradeDate}`);
+  const stats = computeStats(trades.filter((t) => !isHidden(t)), config.beBandR);
   const editing = editId ? all.find((t) => t.id === editId) : undefined;
 
   const now = new Date();
@@ -207,7 +208,7 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
               </thead>
               <tbody className="divide-rows">
                 {trades.map((t) => (
-                  <tr key={t.id} className={t.hidden ? 'opacity-45' : ''}>
+                  <tr key={t.id} className={isHidden(t) ? 'opacity-45' : ''}>
                     <td className="py-1.5 whitespace-nowrap">{t.tradeDate}</td>
                     <td className="whitespace-nowrap text-dim">{formatTime(t.openedAt, config.timezone)}</td>
                     <td className="max-w-[9rem] truncate text-dim">{scope.accounts.find((a) => a.id === t.accountId)?.name}</td>
@@ -229,6 +230,8 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
                     <td className="whitespace-nowrap">
                       {t.hidden ? (
                         <Badge tone="warn">Hidden</Badge>
+                      ) : hiddenDays.has(`${t.accountId}|${t.tradeDate}`) ? (
+                        <Badge tone="warn">Hidden day</Badge>
                       ) : t.inSystem ? (
                         <Badge tone="up">In</Badge>
                       ) : (

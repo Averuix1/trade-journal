@@ -228,10 +228,18 @@ export async function getAccountMoney(list: Account[]): Promise<Map<number, Acco
   }
   if (!ids.length) return result;
 
+  // Hidden days are left out of every number the app shows, including the balance.
+  const notOnAHiddenDay = sql`not exists (
+    select 1 from ${dayJournals}
+    where ${dayJournals.accountId} = ${trades.accountId}
+      and ${dayJournals.date} = ${trades.tradeDate}
+      and ${dayJournals.hidden}
+  )`;
+
   const pnlRows = await db
     .select({ accountId: trades.accountId, total: sql<number>`coalesce(sum(${trades.pnl}), 0)` })
     .from(trades)
-    .where(and(inArray(trades.accountId, ids), eq(trades.hidden, false)))
+    .where(and(inArray(trades.accountId, ids), eq(trades.hidden, false), notOnAHiddenDay))
     .groupBy(trades.accountId);
   for (const row of pnlRows) {
     const m = result.get(row.accountId);

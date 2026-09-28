@@ -2,6 +2,7 @@ import { Badge, Card, MoneyText, Stat, StatGrid } from '@/components/ui';
 import { HBar, LineChart } from '@/components/charts';
 import { NoAccounts } from '@/components/no-accounts';
 import { RulesEditor } from '@/components/rules-editor';
+import { round2 } from '@/lib/calc';
 import { getAccountMoney, getScope, getSessionDefs, getSettings, getTrades } from '@/lib/queries';
 import { computeStats, dailyEquityCurve, groupByDay } from '@/lib/stats';
 import { fmtMoney, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
@@ -29,7 +30,8 @@ export default async function SystemPage() {
   const liveBalance = scope.account
     ? (money.get(scope.account.id)?.balance ?? 0)
     : [...money.values()].reduce((sum, m) => sum + m.balance, 0);
-  const cleanBalance = startBalance + inStats.totalPnl;
+  // Live minus the outside-the-system trades, so the two cards always differ by exactly the leak.
+  const cleanBalance = round2(liveBalance - outStats.totalPnl);
   const leak = outStats.totalPnl;
 
   const cleanCurve = dailyEquityCurve([...groupByDay(inSystem, config.beBandR).values()], startBalance);

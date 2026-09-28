@@ -39,14 +39,16 @@ export function PropRulesCard({ status, name }: { status: PropStatus; name: stri
           value={
             status.drawdownLeft == null
               ? 'Not set'
-              : `${fmtMoney(status.drawdownLeft)} left of ${fmtMoney(status.drawdownLimit)}`
+              : `${fmtMoney(status.drawdownLeft)} above the cut-off`
           }
           tone={status.drawdownLeft != null && status.drawdownLeft <= 0 ? 'down' : undefined}
         />
         {status.drawdownLine != null && (
           <KeyValue
             label="Cut-off balance"
-            value={`${fmtMoney(status.drawdownLine)}${status.drawdownLocked ? ' · locked at start' : ''}`}
+            value={`${fmtMoney(status.drawdownLine)} · ${fmtMoney(status.drawdownLimit)} max DD${
+              status.drawdownLocked ? ' · locked at start' : ''
+            }`}
           />
         )}
         <KeyValue
@@ -77,7 +79,7 @@ export function PropRulesCard({ status, name }: { status: PropStatus; name: stri
           value={
             status.minTradingDays == null
               ? `${status.tradingDays} logged`
-              : `${status.tradingDays} of ${status.minTradingDays}`
+              : `${status.tradingDays} · ${status.minTradingDays} needed`
           }
         />
         <KeyValue label="Best day" value={fmtMoney(status.bestDay)} />

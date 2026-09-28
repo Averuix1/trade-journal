@@ -17,7 +17,8 @@ export default async function MoneyPage() {
   const money = await getAccountMoney(scope.accounts);
   const ledgerAccountIds = scope.account ? [scope.account.id] : scope.accountIds;
   const ledger = await getLedger(ledgerAccountIds);
-  const trades = await getTrades({ accountIds: scope.accountIds });
+  // The prop-house roll-up always spans every account, whatever the header dropdown says.
+  const trades = await getTrades({ accountIds: scope.accounts.map((a) => a.id) });
 
   const propAccounts = scope.accounts.filter((a) => a.type === 'PROP');
   const propIds = new Set(propAccounts.map((a) => a.id));
