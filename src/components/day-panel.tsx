@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import Image from 'next/image';
 import { Badge, MoneyText } from '@/components/ui';
 import { LineChart } from '@/components/charts';
@@ -54,9 +53,9 @@ export function DayPanel({ data }: { data: DayPanelData }) {
             <span className="ml-2 text-sm text-dim">{fmtR(rTotal)}</span>
           </div>
         </div>
-        <Link href={data.closeHref} className="btn btn-sm btn-ghost" aria-label="Close day panel">
+        <a href={data.closeHref} className="btn btn-sm btn-ghost" aria-label="Close day panel">
           Close
-        </Link>
+        </a>
       </header>
 
       <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">

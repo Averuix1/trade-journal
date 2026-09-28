@@ -273,7 +273,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                           ? 'bg-loss text-[#ffe7ea]'
                           : 'bg-ink-700 text-[#cdefe2]';
                   return (
-                    <Link
+                    // Same-page client navigations are cancelled while the route skeleton is showing.
+                    <a
                       key={key}
                       href={qs({ day: key })}
                       className={`relative flex min-h-[86px] flex-col rounded-xl px-2 py-1.5 transition hover:ring-2 hover:ring-mint-400/50 ${tone} ${
@@ -298,7 +299,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                           <span className="text-[10px] uppercase tracking-widest text-dim">Sat out</span>
                         ) : null}
                       </div>
-                    </Link>
+                    </a>
                   );
                 })}
                 <div className="flex min-h-[86px] flex-col items-center justify-center rounded-xl bg-ink-850/80 px-2 py-1.5">
@@ -383,9 +384,9 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                     return (
                       <tr key={day.date}>
                         <td className="py-1.5">
-                          <Link href={qs({ day: day.date })} className="text-mint-300 hover:underline">
+                          <a href={qs({ day: day.date })} className="text-mint-300 hover:underline">
                             {day.date}
-                          </Link>
+                          </a>
                         </td>
                         <td className="text-dim">{sessionNames.join(', ')}</td>
                         {['T1', 'T2', 'T3'].map((slot) => {

@@ -43,7 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-line bg-ink-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-          <Link href="/" prefetch className="mr-1 text-sm font-black tracking-[0.2em] text-mint-300">
+          <Link href="/" className="mr-1 text-sm font-black tracking-[0.2em] text-mint-300">
             TJ
           </Link>
           <AccountSwitcher groups={groupAccounts(scope.accounts)} current={scope.account} />

@@ -37,20 +37,12 @@ export function Nav() {
   const moreActive = MORE.some((item) => isActive(pathname, item.href));
 
   return (
-    <nav className="relative flex flex-wrap items-center gap-1">
+    <nav className="flex flex-wrap items-center gap-1">
       {PRIMARY.map((item) => (
-        <Link key={item.href} href={item.href} prefetch className={tabClass(isActive(pathname, item.href))}>
+        <Link key={item.href} href={item.href} prefetch="auto" className={tabClass(isActive(pathname, item.href))}>
           {item.label}
         </Link>
       ))}
-      {/* More unmounts until the menu opens, so these stay in view and prefetch while it is closed. */}
-      <div aria-hidden className="pointer-events-none absolute left-0 top-0 h-px w-px overflow-hidden">
-        {MORE.map((item) => (
-          <Link key={item.href} href={item.href} prefetch tabIndex={-1}>
-            {item.label}
-          </Link>
-        ))}
-      </div>
       <Dropdown
         menuClassName="left-0 w-44"
         label={() => <span className={tabClass(moreActive)}>More</span>}
@@ -60,7 +52,7 @@ export function Nav() {
             <Link
               key={item.href}
               href={item.href}
-              prefetch
+              prefetch="auto"
               onClick={close}
               className={`block rounded-lg px-3 py-2 text-sm ${
                 isActive(pathname, item.href) ? 'bg-mint-500/15 text-mint-200' : 'text-[#cdefe2] hover:bg-ink-800'
