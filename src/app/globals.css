@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    @apply bg-ink-950 text-[#d8ece6];
+    font-feature-settings: 'tnum' 1;
+  }
+
+  body {
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, rgba(18, 180, 127, 0.1), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(12, 143, 101, 0.08), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-mint-500/40;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply bg-ink-900 border border-line rounded-lg px-3 py-2 text-sm text-[#e6fff5] outline-none;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply border-mint-400/70 ring-1 ring-mint-400/30;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    @apply h-4 w-4 p-0 accent-[#22d39a];
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-dim/70;
+  }
+
+  ::-webkit-calendar-picker-indicator {
+    filter: invert(0.7) sepia(1) saturate(3) hue-rotate(110deg);
+  }
+
+  table {
+    @apply w-full text-sm;
+  }
+
+  th {
+    @apply text-left text-[11px] uppercase tracking-wider text-dim font-medium;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-ink-900/80 backdrop-blur-sm;
+  }
+
+  .card-pad {
+    @apply p-4 sm:p-5;
+  }
+
+  .card-title {
+    @apply text-[11px] uppercase tracking-[0.14em] text-dim;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-ink-800 px-3 py-2
+      text-sm font-medium text-[#cdefe2] transition hover:border-line-bright hover:bg-ink-700
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply border-transparent bg-mint-500 text-[#03241a] hover:bg-mint-400 hover:text-[#03241a];
+  }
+
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-dim hover:bg-ink-800 hover:text-[#cdefe2];
+  }
+
+  .btn-danger {
+    @apply border-[#7a2331] bg-[#3a1119] text-[#ff9aa3] hover:bg-[#54161f];
+  }
+
+  .btn-sm {
+    @apply px-2.5 py-1 text-xs;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-ink-850 px-2.5 py-1
+      text-[11px] font-medium uppercase tracking-wide text-dim;
+  }
+
+  .pill-on {
+    @apply border-mint-500/50 bg-mint-500/15 text-mint-200;
+  }
+
+  .label {
+    @apply mb-1 block text-[11px] uppercase tracking-wider text-dim;
+  }
+
+  .field {
+    @apply w-full;
+  }
+
+  .stat-value {
+    @apply text-2xl font-semibold tracking-tight text-[#eafff7];
+  }
+
+  .divide-rows > * + * {
+    @apply border-t border-line-soft;
+  }
+
+  .scroll-x {
+    @apply overflow-x-auto [scrollbar-width:thin];
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
