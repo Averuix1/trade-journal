@@ -21,6 +21,8 @@ export type TradeStats = {
   totalPnl: number;
   totalR: number;
   avgR: number;
+  /** Mean of stored planned reward:risk. Null when no trade in the set has one. */
+  avgPlannedRr: number | null;
   grossProfit: number;
   grossLoss: number;
   winRate: number;
@@ -45,6 +47,7 @@ export const EMPTY_STATS: TradeStats = {
   totalPnl: 0,
   totalR: 0,
   avgR: 0,
+  avgPlannedRr: null,
   grossProfit: 0,
   grossLoss: 0,
   winRate: 0,
@@ -81,6 +84,8 @@ export function computeStats(trades: Trade[], beBandR: number): TradeStats {
   let totalPnl = 0;
   let totalR = 0;
   let rCount = 0;
+  let plannedSum = 0;
+  let plannedCount = 0;
   let best = -Infinity;
   let worst = Infinity;
   const holds: number[] = [];
@@ -92,6 +97,10 @@ export function computeStats(trades: Trade[], beBandR: number): TradeStats {
     if (t.rMultiple != null) {
       totalR += t.rMultiple;
       rCount += 1;
+    }
+    if (t.plannedRr != null) {
+      plannedSum += t.plannedRr;
+      plannedCount += 1;
     }
     best = Math.max(best, t.pnl);
     worst = Math.min(worst, t.pnl);
@@ -126,6 +135,7 @@ export function computeStats(trades: Trade[], beBandR: number): TradeStats {
     totalPnl: round2(totalPnl),
     totalR: round2(totalR),
     avgR: rCount ? round2(totalR / rCount) : 0,
+    avgPlannedRr: plannedCount ? round2(plannedSum / plannedCount) : null,
     grossProfit: round2(grossProfit),
     grossLoss: round2(grossLoss),
     winRate: round2(winRate),
@@ -347,4 +357,82 @@ export function triggerRates(trades: Trade[]): { slot: string; rate: number; of:
     result.push({ slot: `${from} → ${to}`, rate: had ? round2((fired / had) * 100) : 0, of: had });
   }
   return result;
+}
+
+/** Profit factor from daily totals: green days divided by the size of red days. */
+export function dayProfitFactor(days: DaySummary[]): number | null {
+  let green = 0;
+  let red = 0;
+  for (const day of days) {
+    if (day.pnl > 0) green += day.pnl;
+    else if (day.pnl < 0) red += Math.abs(day.pnl);
+  }
+  if (red === 0) return green > 0 ? null : 0;
+  return round2(green / red);
+}
+
+/** Consecutive winning and losing trades, breakevens skipped. Day streaks live in `streaks`. */
+export function tradeStreaks(trades: Trade[], beBandR: number): { current: number; best: number; worst: number } {
+  const sorted = [...trades].sort((a, b) => a.openedAt.getTime() - b.openedAt.getTime());
+  let current = 0;
+  let best = 0;
+  let worst = 0;
+  for (const trade of sorted) {
+    const outcome = outcomeOf(trade, beBandR);
+    if (outcome === 'BE') continue;
+    if (outcome === 'WIN') current = current > 0 ? current + 1 : 1;
+    else current = current < 0 ? current - 1 : -1;
+    best = Math.max(best, current);
+    worst = Math.min(worst, current);
+  }
+  return { current, best, worst };
+}
+
+/** Passed when every filled session has No-answers at or under the skip line. */
+export function checklistVerdict(
+  checklist: Record<string, { answers: (boolean | null)[] | null }> | null | undefined,
+  skipIfNo: number,
+): 'passed' | 'failed' | 'blank' {
+  const filled = Object.values(checklist ?? {}).filter((run) => (run?.answers ?? []).some((answer) => answer != null));
+  if (!filled.length) return 'blank';
+  const failed = filled.some((run) => (run.answers ?? []).filter((answer) => answer === false).length > skipIfNo);
+  return failed ? 'failed' : 'passed';
+}
+
+export type ProcessSlice = { label: string; days: number; pnl: number; r: number; winRate: number };
+
+/** Day win % is green days divided by green + red days. Flat days stay in the count but not the rate. */
+export function processSlice(label: string, days: { pnl: number; r: number }[]): ProcessSlice {
+  let green = 0;
+  let red = 0;
+  let pnl = 0;
+  let r = 0;
+  for (const day of days) {
+    pnl += day.pnl;
+    r += day.r;
+    if (day.pnl > 0) green += 1;
+    else if (day.pnl < 0) red += 1;
+  }
+  const decided = green + red;
+  return {
+    label,
+    days: days.length,
+    pnl: round2(pnl),
+    r: round2(r),
+    winRate: decided ? round2((green / decided) * 100) : 0,
+  };
+}
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+export function ruleBreakDaysByWeekday(
+  dates: { date: string; broke: boolean }[],
+): { weekday: string; days: number; breakDays: number }[] {
+  const rows = WEEKDAY_NAMES.map((weekday) => ({ weekday, days: 0, breakDays: 0 }));
+  for (const entry of dates) {
+    const row = rows[weekdayOf(entry.date)];
+    row.days += 1;
+    if (entry.broke) row.breakDays += 1;
+  }
+  return rows.filter((row) => row.days > 0);
 }

@@ -1,6 +1,6 @@
 // Local verification pass: exercises the main flows and writes screenshots.
 //   node scripts/verify.mjs [baseUrl] [outDir]
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const BASE = process.argv[2] ?? 'http://localhost:3000';
@@ -128,15 +128,89 @@ try {
   check('Tank shows losses-left', await page.getByText('Full-risk losses left').isVisible());
 
   // --- trades + add form ---
+  const headerBalance = async () => {
+    const text = await page.locator('header').getByText(/balance /).innerText();
+    return Number(text.replace(/[^0-9.-]/g, ''));
+  };
+  const deleteRow = async (pnlText, rText) => {
+    await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+    const row = page.locator('tbody tr').filter({ hasText: pnlText }).filter({ hasText: rText }).first();
+    await row.getByRole('button', { name: 'Delete' }).click();
+    await page.waitForTimeout(1600);
+  };
+
   await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  check('Quick entry is the default', await page.locator('#takeProfit').isVisible());
+  await page.getByRole('button', { name: 'Detailed', exact: true }).click();
+  await page.waitForTimeout(400);
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  check('Detailed mode is remembered', await page.locator('#contracts').isVisible());
+  await page.getByRole('button', { name: 'Quick', exact: true }).click();
+  await page.waitForTimeout(400);
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  check('Quick mode is remembered', await page.locator('#takeProfit').isVisible() && (await page.locator('#contracts').count()) === 0);
+
+  await page.fill('#plannedRisk', '250');
+  await page.fill('#takeProfit', '500');
+  await page.getByRole('button', { name: 'Win', exact: true }).click();
+  await page.locator('#live-result').scrollIntoViewIfNeeded();
+  await shot('23-quick-trade');
+  const winLive = await page.locator('#live-result').innerText();
+  const winPlan = await page.locator('#planned-rr').innerText();
+  check('Quick win shows +$500 and +2R', winLive.includes('+$500.00') && winLive.includes('+2.00R'), winLive);
+  check('Quick win shows planned 2R', winPlan.includes('+2.00R'), winPlan);
+  const balanceBefore = await headerBalance();
+  const winDay = await page.locator('#tradeDate').inputValue();
+  await page.getByRole('button', { name: 'Log trade' }).click();
+  await page.waitForTimeout(2200);
+  check('Quick win saves', await page.getByText('Trade logged.').isVisible());
+  const balanceAfterWin = await headerBalance();
+  check('Quick win raises the balance by 500', balanceAfterWin - balanceBefore === 500, `${balanceBefore} -> ${balanceAfterWin}`);
+  await page.goto(`${BASE}/calendar?day=${winDay}`, { waitUntil: 'networkidle' });
+  check('Calendar shows the quick win', await page.getByText('+$500').first().isVisible() && await page.getByText('+2.00R').first().isVisible());
+  await page.goto(`${BASE}/stats`, { waitUntil: 'networkidle' });
+  const plannedStat = page.getByText('Avg planned RR', { exact: true }).locator('..');
+  check('Stats show average planned RR', await plannedStat.isVisible());
+  check('Stats average planned RR is +2R', (await plannedStat.innerText()).includes('+2.00R'), await plannedStat.innerText());
+  await deleteRow('+$500.00', '+2.00R');
+
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  await page.fill('#plannedRisk', '250');
+  await page.fill('#takeProfit', '500');
+  await page.getByRole('button', { name: 'Loss', exact: true }).click();
+  const lossLive = await page.locator('#live-result').innerText();
+  check('Quick loss shows -$250 and -1R', lossLive.includes('-$250.00') && lossLive.includes('-1.00R'), lossLive);
+  const balanceBeforeLoss = await headerBalance();
+  await page.getByRole('button', { name: 'Log trade' }).click();
+  await page.waitForTimeout(2200);
+  check('Quick loss saves', await page.getByText('Trade logged.').isVisible());
+  const balanceAfterLoss = await headerBalance();
+  check('Quick loss lowers the balance by 250', balanceBeforeLoss - balanceAfterLoss === 250, `${balanceBeforeLoss} -> ${balanceAfterLoss}`);
+  await deleteRow('-$250.00', '-1.00R');
+
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  await page.fill('#plannedRisk', '250');
+  await page.fill('#takeProfit', '500');
+  await page.getByRole('button', { name: 'Partial', exact: true }).click();
+  await page.fill('#customPnl', '125');
+  const partialLive = await page.locator('#live-result').innerText();
+  check('Quick partial shows +$125 and +0.50R', partialLive.includes('+$125.00') && partialLive.includes('+0.50R'), partialLive);
+  await page.getByRole('button', { name: 'Log trade' }).click();
+  await page.waitForTimeout(2200);
+  check('Quick partial saves', await page.getByText('Trade logged.').isVisible());
+  await deleteRow('+$125.00', '+0.50R');
+
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  await page.getByRole('button', { name: 'Detailed', exact: true }).click();
   await page.selectOption('#symbol', 'MNQ');
   await page.fill('#contracts', '5');
   await page.fill('#entryPrice', '20100');
   await page.fill('#stopPrice', '20080');
   await page.fill('#exitPrice', '20145');
   await page.waitForTimeout(300);
-  const resultText = await page.locator('form').getByText(/^\$/).last().innerText();
+  const resultText = await page.locator('#live-result').innerText();
   check('Trade form computes P&L live', /\$\d/.test(resultText), resultText);
+  await page.locator('#live-result').scrollIntoViewIfNeeded();
   await shot('08-trades-add-form');
 
   const rowsBefore = await page.locator('tbody tr').count();
@@ -150,6 +224,9 @@ try {
   // delete it again so the demo data stays clean
   await page.locator('tbody tr').first().getByRole('button', { name: 'Delete' }).click();
   await page.waitForTimeout(1600);
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  await page.getByRole('button', { name: 'Quick', exact: true }).click();
+  await page.waitForTimeout(500);
 
   // --- money ---
   await page.goto(`${BASE}/money`, { waitUntil: 'networkidle' });
@@ -173,8 +250,81 @@ try {
   if (hasHistory) {
     await page.getByRole('button', { name: 'Undo import' }).first().click();
     await page.waitForTimeout(2000);
-    check('Undo import removes the batch', (await page.getByRole('button', { name: 'Undo import' }).count()) === 0);
+      check('Undo import removes the batch', (await page.getByRole('button', { name: 'Undo import' }).count()) === 0);
   }
+
+  // --- google sheets journal (preview, day record, then undo so demo data stays clean) ---
+  const uploadDir = '/home/ubuntu/.cursor/projects/workspace/uploads';
+  const sheetName = readdirSync(uploadDir)
+    .filter((name) => name.startsWith('sheet-trades-all') && name.endsWith('.csv'))
+    .sort()
+    .at(-1);
+  const sheetCsv = `${uploadDir}/${sheetName}`;
+  await page.goto(`${BASE}/import`, { waitUntil: 'networkidle' });
+  await page.setInputFiles('#file', sheetCsv);
+  await page.getByRole('button', { name: 'Read file' }).click();
+  await page.waitForTimeout(2000);
+  check('Sheet preset is detected', await page.getByText('Google Sheets journal').first().isVisible());
+  check('Sheet preview recalculates R', await page.getByText('+2.23R').isVisible());
+  check('Sheet preview notes the $500 placeholder', await page.getByText(/\$500 is a placeholder/).isVisible());
+  await shot('16-sheet-import');
+  const sheetButton = page.getByRole('button', { name: /^Import \d+ trades$/ });
+  const sheetLabel = await sheetButton.innerText();
+  check('Sheet preview counts 18 trades', /Import 18 trades/.test(sheetLabel), sheetLabel);
+  await sheetButton.click();
+  await page.waitForTimeout(4000);
+  check('Sheet import reports 18 trades', await page.getByText(/Imported 18 trade/).isVisible());
+
+  await page.goto(`${BASE}/calendar?month=2026-09&day=2026-09-14`, { waitUntil: 'networkidle' });
+  await page.getByLabel('Rules followed?').scrollIntoViewIfNeeded();
+  await shot('17-day-record');
+  check('Day record has rules followed', await page.getByLabel('Rules followed?').isVisible());
+  check('Day record keeps the reason separate', await page.getByLabel('Rule-break reason').isVisible());
+  for (const name of ['check_london_0', 'check_london_1', 'check_london_2']) {
+    await page.locator(`select[name="${name}"]`).selectOption('no');
+  }
+  await page.getByText('Pre-trade checklist').scrollIntoViewIfNeeded();
+  await shot('18-checklist');
+  check('Day checklist warns about skipping', await page.getByText(/consider skipping/).isVisible());
+  await page.getByRole('button', { name: 'Save journal' }).click();
+  await page.waitForTimeout(1500);
+
+  await page.goto(`${BASE}/stats`, { waitUntil: 'networkidle' });
+  await page.locator('#process').scrollIntoViewIfNeeded();
+  await shot('19-process-stats');
+  check('Stats show day profit factor', await page.getByText('Day profit factor').isVisible());
+  check(
+    'Stats show rules followed vs broken',
+    await page.getByRole('heading', { name: 'By day · rules followed vs broken' }).isVisible(),
+  );
+  check('Stats show checklist passed vs failed', await page.getByText('Checklist passed vs failed').isVisible());
+
+  await page.goto(`${BASE}/import`, { waitUntil: 'networkidle' });
+  const sheetHistory = (await page.getByRole('button', { name: 'Undo import' }).count()) > 0;
+  if (sheetHistory) {
+    await page.getByRole('button', { name: 'Undo import' }).first().click();
+    await page.waitForTimeout(2500);
+    check('Undo sheet import removes the batch', (await page.getByRole('button', { name: 'Undo import' }).count()) === 0);
+  } else {
+    check('Undo sheet import removes the batch', false, 'no undo button');
+  }
+
+  await page.goto(`${BASE}/settings`, { waitUntil: 'networkidle' });
+  await page.getByText('Contracts & commissions').scrollIntoViewIfNeeded();
+  await shot('20-settings-aliases');
+  const aliasValues = await page.locator('input[name="aliases"]').evaluateAll((els) => els.map((el) => el.value));
+  const symbols = await page.locator('input[name="symbol"]').evaluateAll((els) => els.map((el) => el.value));
+  check(
+    'Settings list instrument aliases',
+    aliasValues.some((value) => value.includes('NASDAQ')) && aliasValues.some((value) => value.includes('US30')) && symbols.includes('MYM'),
+    aliasValues.join(' | '),
+  );
+  await page.getByText('Mistake tags').scrollIntoViewIfNeeded();
+  await shot('21-settings-reasons');
+  check('Settings seed the eight reasons', await page.getByText('Overtrading').isVisible() && await page.getByText('Late Entry').isVisible());
+  await page.getByText('Pre-trade checklist').scrollIntoViewIfNeeded();
+  await shot('22-settings-checklist');
+  check('Checklist editor is on Settings', await page.getByRole('button', { name: 'Save checklist' }).isVisible());
 
   // --- playbooks ---
   await page.goto(`${BASE}/playbooks`, { waitUntil: 'networkidle' });

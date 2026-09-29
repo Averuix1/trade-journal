@@ -15,9 +15,12 @@ export default async function SystemPage() {
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, sessions] = await Promise.all([getSettings(), getSessionDefs()]);
-  const trades = await getTrades({ accountIds: scope.accountIds });
-  const money = await getAccountMoney(scope.accounts);
+  const [config, sessions, trades, money] = await Promise.all([
+    getSettings(),
+    getSessionDefs(),
+    getTrades({ accountIds: scope.accountIds }),
+    getAccountMoney(scope.accounts),
+  ]);
 
   const inSystem = trades.filter((t) => t.inSystem);
   const outside = trades.filter((t) => !t.inSystem);

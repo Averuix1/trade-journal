@@ -123,6 +123,7 @@ async function main() {
       minTradingDays: 5,
       maxTradesPerSession: 3,
       riskPerTrade: 300,
+      riskPresets: [200, 250, 300, 400, 500],
       activeSessions: ['london', 'ny_am', 'ny_pm'],
       entryWindows: { london: 45, ny_am: 30, ny_pm: 30 },
       resetOfAccountId: evalAccount.id,
@@ -237,7 +238,7 @@ async function main() {
           const playbook = rand() < 0.75 ? (rand() < 0.6 ? breakout : reversal) : null;
           const rules = playbook?.id === breakout.id ? breakoutRules : reversalRules;
           const brokeRule = playbook && rand() < 0.16;
-          const mistakes = rand() < 0.1 ? [pick(['Revenge', 'FOMO', 'Chased move'])] : [];
+          const mistakes = rand() < 0.1 ? [pick(['Revenge', 'FOMO', 'Chased Move'])] : [];
 
           await db.insert(trades).values({
             accountId: plan.account.id,

@@ -3,8 +3,9 @@
 import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { dayJournals } from '@/lib/db/schema';
+import { dayJournals, type ChecklistRun, type ScreenshotLink } from '@/lib/db/schema';
 import { bool, num, str, type FormState } from '@/lib/actions/shared';
+import { getSessionDefs, getSettings } from '@/lib/queries';
 
 async function upsertJournal(accountId: number, date: string, values: Partial<typeof dayJournals.$inferInsert>) {
   const [existing] = await db
@@ -25,11 +26,51 @@ export async function saveDayJournal(_prev: FormState, formData: FormData): Prom
   const accountId = Number(formData.get('accountId'));
   const date = String(formData.get('date') ?? '');
   if (!accountId || !date) return { error: 'Pick an account and a day first.' };
+  const tri = (key: string): boolean | null => {
+    const raw = formData.get(key);
+    if (raw == null || String(raw) === '') return null;
+    return bool(raw);
+  };
+  const [config, sessions, existing] = await Promise.all([
+    getSettings(),
+    getSessionDefs(),
+    db
+      .select()
+      .from(dayJournals)
+      .where(and(eq(dayJournals.accountId, accountId), eq(dayJournals.date, date)))
+      .then((rows) => rows[0]),
+  ]);
+  const url = str(formData.get('screenshotUrl'));
+  const comment = str(formData.get('screenshotComment'));
+  const previousUrl = str(formData.get('previousScreenshotUrl'));
+  let screenshotLinks: ScreenshotLink[] = existing?.screenshotLinks ?? [];
+  if (url) {
+    screenshotLinks = screenshotLinks.filter((link) => link.url !== url && link.url !== previousUrl);
+    screenshotLinks = [...screenshotLinks, { url, comment }];
+  } else if (previousUrl) {
+    screenshotLinks = screenshotLinks.filter((link) => link.url !== previousUrl);
+  }
+  const checklist: Record<string, ChecklistRun> = {};
+  for (const session of sessions) {
+    const answers = config.checklistItems.map((_, index) => {
+      const value = str(formData.get(`check_${session.key}_${index}`));
+      if (value === 'yes') return true;
+      if (value === 'no') return false;
+      return null;
+    });
+    const note = str(formData.get(`checkNote_${session.key}`));
+    if (answers.some((answer) => answer != null) || note) checklist[session.key] = { answers, note };
+  }
   await upsertJournal(accountId, date, {
     mood: num(formData.get('mood')),
     sleepHours: num(formData.get('sleepHours')),
     grade: str(formData.get('grade')),
-    followedPlan: formData.get('followedPlan') == null ? null : bool(formData.get('followedPlan')),
+    followedPlan: tri('followedPlan'),
+    rulesFollowed: tri('rulesFollowed'),
+    ruleBreakReason: str(formData.get('ruleBreakReason')),
+    sleptWell: tri('sleptWell'),
+    screenshotLinks,
+    checklist,
     lesson: str(formData.get('lesson')),
     notes: str(formData.get('notes')),
     satOut: bool(formData.get('satOut')),

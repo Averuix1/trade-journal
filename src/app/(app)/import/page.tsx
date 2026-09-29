@@ -11,8 +11,7 @@ export default async function ImportPage() {
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const config = await getSettings();
-  const batches = await getImports(scope.accounts.map((a) => a.id));
+  const [config, batches] = await Promise.all([getSettings(), getImports(scope.accounts.map((a) => a.id))]);
 
   return (
     <div className="space-y-5">
@@ -38,6 +37,15 @@ export default async function ImportPage() {
             <p>
               In Tradovate go to Reports → Performance → Trades and download the CSV. Its bought/sold timestamps and
               buy/sell prices are used to work out whether each trade was long or short.
+            </p>
+          </div>
+          <div>
+            <div className="mb-1 font-medium text-[#cdefe2]">Google Sheets journal</div>
+            <p>
+              Export the trade log (one row per filled slot). Date, session, slot, instrument, direction, risk and
+              result are read. The sheet&rsquo;s outcome and R columns are ignored and R is recalculated. Day notes,
+              the rules-followed answer, the reason and the chart link land on the day. Undoing the batch removes the
+              trades and leaves those day notes in place.
             </p>
           </div>
         </div>

@@ -9,10 +9,8 @@ export const metadata = { title: 'Edit account — Trade Journal' };
 
 export default async function EditAccountPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const account = await getAccount(Number(id));
+  const [account, sessions, config] = await Promise.all([getAccount(Number(id)), getSessionDefs(), getSettings()]);
   if (!account) notFound();
-
-  const [sessions, config] = await Promise.all([getSessionDefs(), getSettings()]);
   const today = todayKey(config.timezone);
 
   return (

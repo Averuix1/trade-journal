@@ -39,7 +39,7 @@ export function Nav() {
   return (
     <nav className="flex flex-wrap items-center gap-1">
       {PRIMARY.map((item) => (
-        <Link key={item.href} href={item.href} className={tabClass(isActive(pathname, item.href))}>
+        <Link key={item.href} href={item.href} prefetch="auto" className={tabClass(isActive(pathname, item.href))}>
           {item.label}
         </Link>
       ))}
@@ -52,6 +52,7 @@ export function Nav() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch="auto"
               onClick={close}
               className={`block rounded-lg px-3 py-2 text-sm ${
                 isActive(pathname, item.href) ? 'bg-mint-500/15 text-mint-200' : 'text-[#cdefe2] hover:bg-ink-800'

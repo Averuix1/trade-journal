@@ -1,9 +1,17 @@
 export const DEFAULT_INSTRUMENTS = [
-  { symbol: 'NQ', name: 'E-mini Nasdaq 100', pointValue: 20, tickSize: 0.25, commissionPerContract: 4.04, sortOrder: 0 },
-  { symbol: 'MNQ', name: 'Micro Nasdaq 100', pointValue: 2, tickSize: 0.25, commissionPerContract: 1.34, sortOrder: 1 },
-  { symbol: 'ES', name: 'E-mini S&P 500', pointValue: 50, tickSize: 0.25, commissionPerContract: 4.04, sortOrder: 2 },
-  { symbol: 'MES', name: 'Micro S&P 500', pointValue: 5, tickSize: 0.25, commissionPerContract: 1.34, sortOrder: 3 },
+  { symbol: 'NQ', name: 'E-mini Nasdaq 100', pointValue: 20, tickSize: 0.25, commissionPerContract: 4.04, aliases: ['NASDAQ', 'NAS100'], sortOrder: 0 },
+  { symbol: 'MNQ', name: 'Micro Nasdaq 100', pointValue: 2, tickSize: 0.25, commissionPerContract: 1.34, aliases: [] as string[], sortOrder: 1 },
+  { symbol: 'ES', name: 'E-mini S&P 500', pointValue: 50, tickSize: 0.25, commissionPerContract: 4.04, aliases: [] as string[], sortOrder: 2 },
+  { symbol: 'MES', name: 'Micro S&P 500', pointValue: 5, tickSize: 0.25, commissionPerContract: 1.34, aliases: [] as string[], sortOrder: 3 },
+  { symbol: 'YM', name: 'E-mini Dow', pointValue: 5, tickSize: 1, commissionPerContract: 4.04, aliases: ['US30'], sortOrder: 4 },
+  { symbol: 'MYM', name: 'Micro Dow', pointValue: 0.5, tickSize: 1, commissionPerContract: 1.34, aliases: [] as string[], sortOrder: 5 },
 ];
+
+/** Applied when an instrument still has no aliases, so an edit is left alone. */
+export const SEEDED_INSTRUMENT_ALIASES: Record<string, string[]> = {
+  NQ: ['NASDAQ', 'NAS100'],
+  YM: ['US30'],
+};
 
 /** Session windows are stored as minutes past midnight, New York time. */
 export const DEFAULT_SESSIONS = [
@@ -13,16 +21,40 @@ export const DEFAULT_SESSIONS = [
   { key: 'ny_pm', name: 'New York PM', shortName: 'NY PM', startMinute: 13 * 60, endMinute: 16 * 60, entryWindowMins: 30, sortOrder: 3 },
 ];
 
+/** The eight reasons from the owner's rules playbook. Editable after that; nothing else is assumed. */
 export const DEFAULT_MISTAKE_TAGS = [
   'Revenge',
   'FOMO',
-  'Chased move',
+  'Overtrading',
   'Boredom',
-  'Ignored daily limit',
-  'Moved stop',
-  'Oversized',
-  'No setup',
+  'Chased Move',
+  'Ignored Daily Limit',
+  'Late Entry',
+  'Other',
 ];
+
+export const DEFAULT_RISK_PRESETS = [200, 250, 300, 400, 500];
+
+/** Process checks shown before each session. The user can rewrite every line. */
+export const DEFAULT_CHECKLIST = [
+  'Slept 7 or more hours',
+  'No unaccounted news in the session',
+  'Higher-timeframe bias checked',
+  'Max risk for today is decided',
+  'Max trades for the session is clear',
+  'The session plan is written down',
+  'Not in a revenge mindset',
+  'Phone is silent',
+  'Journal is open',
+  'Sitting out is an acceptable result',
+];
+
+export const DEFAULT_SESSION_ALIASES: Record<string, string[]> = {
+  asia: ['Asia', 'ASIA'],
+  london: ['London', 'LDN', 'LON'],
+  ny_am: ['New York', 'NY', 'New York AM', 'NY AM'],
+  ny_pm: ['New York PM', 'NY PM'],
+};
 
 export const PROP_FIRMS = ['Topstep', 'Apex', 'Tradeify', 'Lucid', 'TakeProfit', 'MyFundedFutures', 'Other'];
 

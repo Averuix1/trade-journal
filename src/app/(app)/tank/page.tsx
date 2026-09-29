@@ -22,11 +22,14 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, instruments] = await Promise.all([getSettings(), getInstruments()]);
   const account = scope.account ?? scope.accounts[0];
-  const money = await getAccountMoney([account]);
-  const trades = await getTrades({ accountIds: [account.id] });
-  const ledger = await getLedger([account.id]);
+  const [config, instruments, money, trades, ledger] = await Promise.all([
+    getSettings(),
+    getInstruments(),
+    getAccountMoney(scope.accounts),
+    getTrades({ accountIds: [account.id] }),
+    getLedger([account.id]),
+  ]);
   const today = todayKey('America/New_York');
 
   const risk = Number(one(params.risk) ?? account.riskPerTrade) || account.riskPerTrade;
@@ -156,9 +159,24 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
             </thead>
             <tbody className="divide-rows">
               {instruments.map((inst) => {
-                const contractsAt = (stop: number) => Math.floor(risk / (stop * inst.pointValue));
+                if (inst.pointValue == null) {
+                  return (
+                    <tr key={inst.symbol}>
+                      <td className="py-1.5">
+                        <span className="font-medium text-[#e6fff5]">{inst.symbol}</span>
+                        <span className="ml-2 text-xs text-dim">{inst.name}</span>
+                      </td>
+                      <td className="text-right text-dim">$ / R only</td>
+                      <td colSpan={stops.length + 2} className="text-dim">
+                        Dollar results only
+                      </td>
+                    </tr>
+                  );
+                }
+                const pointValue = inst.pointValue;
+                const contractsAt = (stop: number) => Math.floor(risk / (stop * pointValue));
                 const chosen = Math.max(0, contractsAt(activeStop));
-                const actualRisk = chosen * activeStop * inst.pointValue;
+                const actualRisk = chosen * activeStop * pointValue;
                 const left = actualRisk > 0 ? Math.floor(Math.max(0, drawdownRoom) / actualRisk) : 0;
                 return (
                   <tr key={inst.symbol}>
@@ -166,7 +184,7 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
                       <span className="font-medium text-[#e6fff5]">{inst.symbol}</span>
                       <span className="ml-2 text-xs text-dim">{inst.name}</span>
                     </td>
-                    <td className="text-right text-dim">{fmtMoney(inst.pointValue)}</td>
+                    <td className="text-right text-dim">{fmtMoney(pointValue)}</td>
                     {stops.map((s) => {
                       const n = contractsAt(s);
                       return (

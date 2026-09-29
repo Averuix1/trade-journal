@@ -3,23 +3,97 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { accounts, instruments, screenshots, settings, trades } from '@/lib/db/schema';
-import { autoFees, autoPnl, autoR, round2 } from '@/lib/calc';
+import { accounts, instruments, screenshots, sessionDefs, settings, trades } from '@/lib/db/schema';
+import { autoFees, autoPnl, autoR, plannedRewardRisk, quickPnl, rFromRisk, round2, type QuickOutcome } from '@/lib/calc';
 import { tradingDay, zonedInputToUtc } from '@/lib/time';
 import { getSettings } from '@/lib/queries';
 import { saveScreenshot } from '@/lib/blob';
+import { placeholderOpen } from '@/lib/sheet-import';
 import { bool, num, numList, recomputeAccountDays, str, strList, type FormState } from '@/lib/actions/shared';
+import type { Trade } from '@/lib/db/schema';
 
-async function buildTradeValues(formData: FormData) {
+function isQuickOutcome(value: string | null): value is QuickOutcome {
+  return value === 'win' || value === 'loss' || value === 'be' || value === 'custom';
+}
+
+async function buildTradeValues(formData: FormData, existing?: Trade) {
   const config = await getSettings();
   const accountId = Number(formData.get('accountId'));
   if (!accountId) throw new Error('Pick an account.');
   const symbol = (str(formData.get('symbol')) ?? 'NQ').toUpperCase();
   const [instrument] = await db.select().from(instruments).where(eq(instruments.symbol, symbol));
-  const pointValue = instrument?.pointValue ?? 1;
-
+  const [account] = await db.select().from(accounts).where(eq(accounts.id, accountId));
+  if (!account) throw new Error('Pick an account.');
+  const pointValue = instrument?.pointValue ?? null;
   const side = (str(formData.get('side')) ?? 'LONG') as 'LONG' | 'SHORT';
-  const contracts = num(formData.get('contracts')) ?? 1;
+  const quick = str(formData.get('entryMode')) !== 'detailed';
+
+  const shared = {
+    accountId,
+    symbol,
+    side,
+    playbookId: num(formData.get('playbookId')),
+    brokenRuleIds: numList(formData, 'brokenRuleIds'),
+    followedRuleIds: numList(formData, 'followedRuleIds'),
+    mistakeTags: strList(formData, 'mistakeTags'),
+    hidden: bool(formData.get('hidden')),
+    notes: str(formData.get('notes')),
+  };
+
+  if (quick) {
+    const date = str(formData.get('tradeDate'));
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Pick the trading day.');
+    const time = str(formData.get('tradeTime'));
+    const risk = num(formData.get('plannedRisk')) ?? account.riskPerTrade;
+    if (risk == null || risk <= 0) throw new Error('Enter the dollar risk.');
+    const outcome = str(formData.get('outcome'));
+    if (!isQuickOutcome(outcome)) throw new Error('Pick Win, Loss, Breakeven, or Partial.');
+    const takeProfit = num(formData.get('takeProfit'));
+    const fees = num(formData.get('fees')) ?? 0;
+    const pnl = quickPnl(outcome, risk, takeProfit, num(formData.get('customPnl')), fees);
+    if (pnl == null) throw new Error(outcome === 'win' ? 'Enter the take-profit target.' : 'Enter the dollar result.');
+
+    let openedAt: Date;
+    let timeKnown = true;
+    if (time) {
+      openedAt = zonedInputToUtc(`${date}T${time}`, config.timezone);
+    } else {
+      const sessionKey = str(formData.get('sessionKey'));
+      const defs = await db.select().from(sessionDefs);
+      const session = defs.find((row) => row.key === sessionKey);
+      if (!session) throw new Error('Pick the session.');
+      const sameDay = await db
+        .select({ id: trades.id, sessionKey: trades.sessionKey })
+        .from(trades)
+        .where(and(eq(trades.accountId, accountId), eq(trades.tradeDate, date)));
+      const taken = sameDay.filter((row) => row.id !== existing?.id && row.sessionKey === session.key).length;
+      openedAt = placeholderOpen(date, session, `T${taken + 1}`);
+      timeKnown = false;
+    }
+
+    return {
+      ...shared,
+      openedAt,
+      closedAt: null,
+      tradeDate: time ? tradingDay(openedAt) : date,
+      contracts: existing?.contracts ?? null,
+      plannedRisk: risk,
+      takeProfit,
+      plannedRr: plannedRewardRisk(takeProfit, risk),
+      timeKnown,
+      entryPrice: existing?.entryPrice ?? null,
+      stopPrice: existing?.stopPrice ?? null,
+      exitPrice: existing?.exitPrice ?? null,
+      fees: round2(fees),
+      feesOverridden: true,
+      pnl,
+      pnlOverridden: true,
+      rMultiple: rFromRisk(pnl, risk),
+    };
+  }
+
+  const contracts = num(formData.get('contracts'));
+  const plannedRisk = num(formData.get('plannedRisk'));
   const entryPrice = num(formData.get('entryPrice'));
   const stopPrice = num(formData.get('stopPrice'));
   const exitPrice = num(formData.get('exitPrice'));
@@ -31,25 +105,30 @@ async function buildTradeValues(formData: FormData) {
   const closedAt = closedInput ? zonedInputToUtc(closedInput, config.timezone) : null;
 
   const feesOverridden = bool(formData.get('feesOverridden'));
+  const canPrice = pointValue != null && contracts != null;
   const fees = feesOverridden
     ? (num(formData.get('fees')) ?? 0)
-    : autoFees(contracts, instrument?.commissionPerContract ?? 0);
+    : canPrice
+      ? autoFees(contracts, instrument?.commissionPerContract ?? 0)
+      : 0;
 
   const pnlOverridden = bool(formData.get('pnlOverridden'));
-  const computedPnl = autoPnl(side, entryPrice, exitPrice, contracts, pointValue, fees);
+  const computedPnl = canPrice ? autoPnl(side, entryPrice, exitPrice, contracts, pointValue, fees) : null;
   const pnl = pnlOverridden ? (num(formData.get('pnl')) ?? 0) : (computedPnl ?? num(formData.get('pnl')) ?? 0);
 
-  const manualR = num(formData.get('rMultiple'));
-  const rMultiple = autoR(side, entryPrice, stopPrice, contracts, pointValue, pnl) ?? manualR;
+  const priceR = canPrice ? autoR(side, entryPrice, stopPrice, contracts, pointValue, pnl) : null;
+  const rMultiple = priceR ?? rFromRisk(pnl, plannedRisk ?? account.riskPerTrade);
 
   return {
-    accountId,
+    ...shared,
     openedAt,
     closedAt,
     tradeDate: tradingDay(openedAt),
-    symbol,
-    side,
     contracts,
+    plannedRisk,
+    takeProfit: existing?.takeProfit ?? null,
+    plannedRr: existing?.plannedRr ?? null,
+    timeKnown: true,
     entryPrice,
     stopPrice,
     exitPrice,
@@ -58,12 +137,6 @@ async function buildTradeValues(formData: FormData) {
     pnl: round2(pnl),
     pnlOverridden,
     rMultiple,
-    playbookId: num(formData.get('playbookId')),
-    brokenRuleIds: numList(formData, 'brokenRuleIds'),
-    followedRuleIds: numList(formData, 'followedRuleIds'),
-    mistakeTags: strList(formData, 'mistakeTags'),
-    hidden: bool(formData.get('hidden')),
-    notes: str(formData.get('notes')),
   };
 }
 
@@ -105,7 +178,7 @@ export async function updateTrade(_prev: FormState, formData: FormData): Promise
   if (!existing) return { error: 'Trade not found.' };
   let values;
   try {
-    values = await buildTradeValues(formData);
+    values = await buildTradeValues(formData, existing);
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Could not save the trade.' };
   }
@@ -114,6 +187,11 @@ export async function updateTrade(_prev: FormState, formData: FormData): Promise
   await recomputeAccountDays(values.accountId, [values.tradeDate, existing.tradeDate]);
   revalidatePath('/', 'layout');
   return { ok: true, message: 'Trade updated.' };
+}
+
+export async function saveTradeEntryMode(mode: 'quick' | 'detailed') {
+  if (mode !== 'quick' && mode !== 'detailed') return;
+  await db.update(settings).set({ tradeEntryMode: mode, updatedAt: new Date() }).where(eq(settings.id, 1));
 }
 
 export async function deleteTrade(formData: FormData) {
@@ -146,15 +224,24 @@ export async function reapplyCommissions(): Promise<FormState> {
   for (const row of rows) {
     const instrument = bySymbol.get(row.symbol.toUpperCase());
     if (!instrument) continue;
+    if (row.contracts == null || instrument.pointValue == null) {
+      const nextR = rFromRisk(row.pnl, row.plannedRisk);
+      if (nextR != null && nextR !== row.rMultiple) {
+        await db.update(trades).set({ rMultiple: nextR }).where(eq(trades.id, row.id));
+        updated += 1;
+      }
+      continue;
+    }
     const fees = autoFees(row.contracts, instrument.commissionPerContract);
     if (Math.abs(fees - row.fees) < 0.005) continue;
     const pnl = row.pnlOverridden
       ? row.pnl
       : (autoPnl(row.side, row.entryPrice, row.exitPrice, row.contracts, instrument.pointValue, fees) ?? row.pnl);
-    await db
-      .update(trades)
-      .set({ fees, pnl, rMultiple: autoR(row.side, row.entryPrice, row.stopPrice, row.contracts, instrument.pointValue, pnl) ?? row.rMultiple })
-      .where(eq(trades.id, row.id));
+    const rMultiple =
+      autoR(row.side, row.entryPrice, row.stopPrice, row.contracts, instrument.pointValue, pnl) ??
+      rFromRisk(pnl, row.plannedRisk) ??
+      row.rMultiple;
+    await db.update(trades).set({ fees, pnl, rMultiple }).where(eq(trades.id, row.id));
     updated += 1;
   }
   revalidatePath('/', 'layout');

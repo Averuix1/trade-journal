@@ -18,12 +18,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const [scope, config, sessions] = await Promise.all([getScope(), getSettings(), getSessionDefs()]);
-  const money = await getAccountMoney(scope.accounts);
-  const hiddenDays = await getHiddenDayCount(scope.accountIds);
   const today = todayKey('America/New_York');
-  const todayTrades = scope.accountIds.length
-    ? await getTrades({ accountIds: scope.accountIds, from: today, to: today })
-    : [];
+  const [money, hiddenDays, todayTrades] = await Promise.all([
+    getAccountMoney(scope.accounts),
+    getHiddenDayCount(scope.accountIds),
+    scope.accountIds.length
+      ? getTrades({ accountIds: scope.accountIds, from: today, to: today })
+      : Promise.resolve([]),
+  ]);
 
   const balance = scope.account
     ? (money.get(scope.account.id)?.balance ?? 0)

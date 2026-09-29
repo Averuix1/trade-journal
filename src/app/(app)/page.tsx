@@ -25,11 +25,14 @@ export default async function DeskPage() {
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, sessions] = await Promise.all([getSettings(), getSessionDefs()]);
-  const trades = await getTrades({ accountIds: scope.accountIds });
-  const money = await getAccountMoney(scope.accounts);
-  const ledger = await getLedger(scope.accountIds);
-  const hidden = await getHiddenDays(scope.accountIds);
+  const [config, sessions, trades, money, ledger, hidden] = await Promise.all([
+    getSettings(),
+    getSessionDefs(),
+    getTrades({ accountIds: scope.accountIds }),
+    getAccountMoney(scope.accounts),
+    getLedger(scope.accountIds),
+    getHiddenDays(scope.accountIds),
+  ]);
 
   const days = groupByDay(trades, config.beBandR);
   const dayList = [...days.values()].sort((a, b) => a.date.localeCompare(b.date));

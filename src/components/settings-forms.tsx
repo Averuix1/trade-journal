@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import type { Instrument, MistakeTag, SessionDef, Settings } from '@/lib/db/schema';
 import {
   addMistakeTag,
+  saveChecklist,
   saveGeneralSettings,
   saveInstruments,
   saveSessions,
@@ -42,13 +43,20 @@ export function GeneralSettingsForm({ config }: { config: Settings }) {
         </label>
         <input id="beBandR" name="beBandR" type="number" step="0.01" min="0" defaultValue={config.beBandR} className="w-28 text-sm" />
       </div>
+      <div>
+        <label className="label" htmlFor="rRounding">
+          R display rounding
+        </label>
+        <input id="rRounding" name="rRounding" type="number" step="0.05" min="0" defaultValue={config.rRounding} className="w-28 text-sm" />
+      </div>
       <button className="btn btn-primary" type="submit" disabled={pending}>
         {pending ? 'Saving…' : 'Save'}
       </button>
       <Feedback state={state} />
       <p className="w-full text-[11px] text-dim">
         Times are entered and shown in this zone. Sessions and the trading day always use New York time, so a NY
-        session never gets split across two calendar days.
+        session never gets split across two calendar days. R is stored unrounded; a display step of 0.25 shows it to
+        the nearest quarter, and 0 leaves two decimals.
       </p>
     </form>
   );
@@ -73,6 +81,7 @@ export function InstrumentsForm({ instruments }: { instruments: Instrument[] }) 
                 <th className="text-right">$ / point</th>
                 <th className="text-right">Tick size</th>
                 <th className="text-right">Commission / contract</th>
+                <th>Aliases</th>
               </tr>
             </thead>
             <tbody className="divide-rows">
@@ -85,13 +94,16 @@ export function InstrumentsForm({ instruments }: { instruments: Instrument[] }) 
                     <input name="name" defaultValue={i.name} className="w-full min-w-[10rem] text-xs" />
                   </td>
                   <td className="text-right">
-                    <input name="pointValue" type="number" step="0.01" defaultValue={i.pointValue} className="w-24 text-right text-xs" />
+                    <input name="pointValue" type="number" step="0.01" defaultValue={i.pointValue ?? ''} placeholder="$ / R" className="w-24 text-right text-xs" />
                   </td>
                   <td className="text-right">
                     <input name="tickSize" type="number" step="0.01" defaultValue={i.tickSize} className="w-24 text-right text-xs" />
                   </td>
                   <td className="text-right">
                     <input name="commissionPerContract" type="number" step="0.01" defaultValue={i.commissionPerContract} className="w-28 text-right text-xs" />
+                  </td>
+                  <td>
+                    <input name="aliases" defaultValue={(i.aliases ?? []).join(', ')} className="w-40 text-xs" placeholder="NASDAQ, NAS100" />
                   </td>
                 </tr>
               ))}
@@ -164,6 +176,7 @@ export function SessionsForm({ sessions }: { sessions: SessionDef[] }) {
               <th>Start (NY)</th>
               <th>End (NY)</th>
               <th className="text-right">Entry window (min)</th>
+              <th>Aliases</th>
             </tr>
           </thead>
           <tbody className="divide-rows">
@@ -184,6 +197,9 @@ export function SessionsForm({ sessions }: { sessions: SessionDef[] }) {
                 </td>
                 <td className="text-right">
                   <input name="entryWindow" type="number" min={0} max={480} defaultValue={s.entryWindowMins} className="w-24 text-right text-xs" />
+                </td>
+                <td>
+                  <input name="sessionAliases" defaultValue={(s.aliases ?? []).join(', ')} className="w-56 text-xs" placeholder="New York, NY" />
                 </td>
               </tr>
             ))}
@@ -230,6 +246,49 @@ export function SessionsForm({ sessions }: { sessions: SessionDef[] }) {
         </button>
         <Feedback state={state} />
       </div>
+    </form>
+  );
+}
+
+export function ChecklistForm({ config }: { config: Settings }) {
+  const [state, action, pending] = useActionState(saveChecklist, initial);
+  return (
+    <form action={action} className="space-y-3">
+      <div>
+        <label className="label" htmlFor="checklistItems">
+          Checks, one per line
+        </label>
+        <textarea
+          id="checklistItems"
+          name="items"
+          rows={8}
+          defaultValue={(config.checklistItems ?? []).join('\n')}
+          className="field"
+        />
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label className="label" htmlFor="checklistSkipIfNo">
+            Warn when No answers exceed
+          </label>
+          <input
+            id="checklistSkipIfNo"
+            name="checklistSkipIfNo"
+            type="number"
+            min={0}
+            defaultValue={config.checklistSkipIfNo}
+            className="w-24 text-sm"
+          />
+        </div>
+        <button className="btn btn-primary" type="submit" disabled={pending}>
+          {pending ? 'Saving…' : 'Save checklist'}
+        </button>
+        <Feedback state={state} />
+      </div>
+      <p className="text-[11px] text-dim">
+        The day panel shows one copy of this list per session you trade. The warning is a reminder only — it does not
+        mark a trade outside the system.
+      </p>
     </form>
   );
 }

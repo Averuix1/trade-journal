@@ -6,6 +6,7 @@ import {
   getHiddenDays,
   getJournal,
   getJournals,
+  getMistakeTags,
   getScope,
   getScreenshots,
   getSessionDefs,
@@ -38,7 +39,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const [config, sessions] = await Promise.all([getSettings(), getSessionDefs()]);
   const today = todayKey('America/New_York');
   const month = one(params.month) ?? today.slice(0, 7);
   const view = one(params.view) === 'week' ? 'week' : 'month';
@@ -54,10 +54,23 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const rangeFrom = view === 'week' ? weekAnchor : monthStart;
   const rangeTo = view === 'week' ? addDays(weekAnchor, 6) : monthEnd;
 
-  const allTrades = await getTrades({ accountIds: scope.accountIds, from: rangeFrom, to: rangeTo, includeHidden: true });
-  const hiddenDayKeys = await getHiddenDays(scope.accountIds);
+  const panelAccountId = scope.account?.id ?? scope.accountIds[0];
+  const dayInRange = Boolean(selectedDay && selectedDay >= rangeFrom && selectedDay <= rangeTo);
+  const [config, sessions, tags, allTrades, hiddenDayKeys, journals, shots] = await Promise.all([
+    getSettings(),
+    getSessionDefs(),
+    getMistakeTags(),
+    getTrades({ accountIds: scope.accountIds, from: rangeFrom, to: rangeTo, includeHidden: true }),
+    getHiddenDays(scope.accountIds),
+    getJournals(scope.accountIds, rangeFrom, rangeTo),
+    selectedDay ? getScreenshots(scope.accountIds, selectedDay) : Promise.resolve([]),
+  ]);
   const hiddenDates = new Set([...hiddenDayKeys].map((k) => k.split('|')[1]));
-  const journals = await getJournals(scope.accountIds, rangeFrom, rangeTo);
+  const selectedJournal = !selectedDay
+    ? undefined
+    : dayInRange
+      ? journals.find((journal) => journal.accountId === panelAccountId && journal.date === selectedDay)
+      : await getJournal(panelAccountId, selectedDay);
 
   const filtered = allTrades.filter((t) => {
     if (t.hidden) return false;
@@ -113,7 +126,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
     return s ? `/calendar?${s}` : '/calendar';
   };
 
-  const panelAccountId = scope.account?.id ?? scope.accountIds[0];
   const panelData = selectedDay
     ? {
         date: selectedDay,
@@ -121,11 +133,17 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
         trades: allTrades
           .filter((t) => t.tradeDate === selectedDay && !t.hidden)
           .sort((a, b) => a.openedAt.getTime() - b.openedAt.getTime()),
-        journal: await getJournal(panelAccountId, selectedDay),
-        screenshots: await getScreenshots(scope.accountIds, selectedDay),
+        journal: selectedJournal,
+        screenshots: shots,
         sessions,
         timezone: config.timezone,
         closeHref: qs({ day: undefined }),
+        mistakeTags: tags.map((tag) => tag.name),
+        activeSessionKeys: scope.account?.activeSessions?.length
+          ? scope.account.activeSessions
+          : sessions.map((session) => session.key),
+        checklistItems: config.checklistItems ?? [],
+        checklistSkipIfNo: config.checklistSkipIfNo ?? 2,
       }
     : null;
 
@@ -255,7 +273,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                           ? 'bg-loss text-[#ffe7ea]'
                           : 'bg-ink-700 text-[#cdefe2]';
                   return (
-                    <Link
+                    // Same-page client navigations are cancelled while the route skeleton is showing.
+                    <a
                       key={key}
                       href={qs({ day: key })}
                       className={`relative flex min-h-[86px] flex-col rounded-xl px-2 py-1.5 transition hover:ring-2 hover:ring-mint-400/50 ${tone} ${
@@ -280,7 +299,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                           <span className="text-[10px] uppercase tracking-widest text-dim">Sat out</span>
                         ) : null}
                       </div>
-                    </Link>
+                    </a>
                   );
                 })}
                 <div className="flex min-h-[86px] flex-col items-center justify-center rounded-xl bg-ink-850/80 px-2 py-1.5">
@@ -365,9 +384,9 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                     return (
                       <tr key={day.date}>
                         <td className="py-1.5">
-                          <Link href={qs({ day: day.date })} className="text-mint-300 hover:underline">
+                          <a href={qs({ day: day.date })} className="text-mint-300 hover:underline">
                             {day.date}
-                          </Link>
+                          </a>
                         </td>
                         <td className="text-dim">{sessionNames.join(', ')}</td>
                         {['T1', 'T2', 'T3'].map((slot) => {

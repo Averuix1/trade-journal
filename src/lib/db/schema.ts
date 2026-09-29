@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   customType,
@@ -41,6 +42,8 @@ export const accounts = pgTable('accounts', {
   // discipline rules
   maxTradesPerSession: integer('max_trades_per_session').notNull().default(3),
   riskPerTrade: doublePrecision('risk_per_trade').notNull().default(300),
+  /** Quick-pick dollar amounts for the add-trade form, e.g. 200, 250, 300. */
+  riskPresets: jsonb('risk_presets').$type<number[]>().notNull().default([200, 250, 300, 400, 500]),
   activeSessions: jsonb('active_sessions').$type<string[]>().notNull().default([]),
   entryWindows: jsonb('entry_windows').$type<Record<string, number>>().notNull().default({}),
   resetOfAccountId: integer('reset_of_account_id'),
@@ -60,7 +63,15 @@ export const trades = pgTable(
     tradeDate: text('trade_date').notNull(),
     symbol: text('symbol').notNull(),
     side: text('side').notNull().$type<'LONG' | 'SHORT'>(),
-    contracts: doublePrecision('contracts').notNull().default(1),
+    contracts: doublePrecision('contracts'),
+    /** Dollar risk used for R when there is no stop price. Sheet imports and quick entry land here. */
+    plannedRisk: doublePrecision('planned_risk'),
+    /** Dollar take-profit target from quick entry. Null when the trade was logged from prices. */
+    takeProfit: doublePrecision('take_profit'),
+    /** Planned reward ÷ risk, stored so stats can compare the plan with the R that was achieved. */
+    plannedRr: doublePrecision('planned_rr'),
+    /** False when the open time is a placeholder (the source had a date but no clock time). */
+    timeKnown: boolean('time_known').notNull().default(true),
     entryPrice: doublePrecision('entry_price'),
     stopPrice: doublePrecision('stop_price'),
     exitPrice: doublePrecision('exit_price'),
@@ -109,6 +120,12 @@ export const dayJournals = pgTable(
     sleepHours: doublePrecision('sleep_hours'),
     grade: text('grade'),
     followedPlan: boolean('followed_plan'),
+    /** Separate from the reason: a day can be "followed" and still carry a reason. */
+    rulesFollowed: boolean('rules_followed'),
+    ruleBreakReason: text('rule_break_reason'),
+    sleptWell: boolean('slept_well'),
+    screenshotLinks: jsonb('screenshot_links').$type<ScreenshotLink[]>().notNull().default([]),
+    checklist: jsonb('checklist').$type<Record<string, ChecklistRun>>().notNull().default({}),
     lesson: text('lesson'),
     notes: text('notes'),
     hidden: boolean('hidden').notNull().default(false),
@@ -157,9 +174,11 @@ export const playbookRules = pgTable('playbook_rules', {
 export const instruments = pgTable('instruments', {
   symbol: text('symbol').primaryKey(),
   name: text('name').notNull(),
-  pointValue: doublePrecision('point_value').notNull(),
+  /** Null means the symbol has no contract multiplier — results are entered in dollars and judged in R. */
+  pointValue: doublePrecision('point_value'),
   tickSize: doublePrecision('tick_size').notNull().default(0.25),
   commissionPerContract: doublePrecision('commission_per_contract').notNull().default(0),
+  aliases: jsonb('aliases').$type<string[]>().notNull().default([]),
   sortOrder: integer('sort_order').notNull().default(0),
 });
 
@@ -171,14 +190,19 @@ export const sessionDefs = pgTable('session_defs', {
   startMinute: integer('start_minute').notNull(),
   endMinute: integer('end_minute').notNull(),
   entryWindowMins: integer('entry_window_mins').notNull().default(30),
+  aliases: jsonb('aliases').$type<string[]>().notNull().default([]),
   sortOrder: integer('sort_order').notNull().default(0),
 });
 
-export const mistakeTags = pgTable('mistake_tags', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  sortOrder: integer('sort_order').notNull().default(0),
-});
+export const mistakeTags = pgTable(
+  'mistake_tags',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (table) => [uniqueIndex('mistake_tags_name_lower_idx').on(sql`lower(${table.name})`)],
+);
 
 export const imports = pgTable('imports', {
   id: serial('id').primaryKey(),
@@ -194,10 +218,20 @@ export const settings = pgTable('settings', {
   id: integer('id').primaryKey().default(1),
   timezone: text('timezone').notNull().default('Australia/Sydney'),
   beBandR: doublePrecision('be_band_r').notNull().default(0.09),
+  /** 0 keeps R unrounded. 0.25 shows R to the nearest quarter, the way the spreadsheet did. */
+  rRounding: doublePrecision('r_rounding').notNull().default(0),
+  checklistItems: jsonb('checklist_items').$type<string[]>().notNull().default([]),
+  checklistSkipIfNo: integer('checklist_skip_if_no').notNull().default(2),
   lastSymbol: text('last_symbol'),
   lastAccountId: integer('last_account_id'),
+  /** Which trade form is open by default. The other mode stays one click away. */
+  tradeEntryMode: text('trade_entry_mode').notNull().default('quick').$type<'quick' | 'detailed'>(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+export type ScreenshotLink = { url: string; comment: string | null };
+
+export type ChecklistRun = { answers: (boolean | null)[]; note: string | null };
 
 export type Account = typeof accounts.$inferSelect;
 export type Trade = typeof trades.$inferSelect;
