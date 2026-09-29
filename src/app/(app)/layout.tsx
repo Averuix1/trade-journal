@@ -1,6 +1,9 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { AccountSwitcher } from '@/components/account-switcher';
 import { Nav } from '@/components/nav';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { THEME_RESOLVED_KEY } from '@/lib/theme';
 import { logout } from '@/lib/actions/auth';
 import {
   getAccountMoney,
@@ -17,6 +20,7 @@ import { todayKey } from '@/lib/time';
 export const dynamic = 'force-dynamic';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const light = (await cookies()).get(THEME_RESOLVED_KEY)?.value === 'light';
   const [scope, config, sessions] = await Promise.all([getScope(), getSettings(), getSessionDefs()]);
   const today = todayKey('America/New_York');
   const [money, hiddenDays, todayTrades] = await Promise.all([
@@ -65,6 +69,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {scope.accounts.length > 0 && counters.length > 0 && (
               <span className="tabular hidden sm:inline">{counters.join(' · ')}</span>
             )}
+            <ThemeToggle initialLight={light} />
             <form action={logout}>
               <button className="btn btn-sm btn-ghost" type="submit">
                 Sign out

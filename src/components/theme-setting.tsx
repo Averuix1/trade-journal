@@ -13,10 +13,14 @@ export function ThemeSetting() {
   const [pref, setPref] = useState<ThemePref>('dark');
 
   useEffect(() => {
-    const fromDom = document.documentElement.getAttribute('data-theme-pref');
-    const stored = localStorage.getItem(THEME_KEY);
-    const next = isThemePref(stored) ? stored : isThemePref(fromDom) ? fromDom : 'dark';
-    setPref(next);
+    const read = () => {
+      const fromDom = document.documentElement.getAttribute('data-theme-pref');
+      const stored = localStorage.getItem(THEME_KEY);
+      setPref(isThemePref(stored) ? stored : isThemePref(fromDom) ? fromDom : 'dark');
+    };
+    read();
+    window.addEventListener('tj-theme', read);
+    return () => window.removeEventListener('tj-theme', read);
   }, []);
 
   return (

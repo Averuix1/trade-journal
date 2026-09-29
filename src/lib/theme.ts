@@ -35,4 +35,5 @@ export function applyTheme(pref: ThemePref) {
   cookie(THEME_RESOLVED_KEY, theme);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', theme === 'light' ? '#F7F7F5' : '#111114');
+  window.dispatchEvent(new CustomEvent('tj-theme', { detail: pref }));
 }
