@@ -30,7 +30,7 @@ export function PlaybookForm({ playbook, rules }: { playbook?: Playbook; rules?:
           <label className="label" htmlFor={`colour-${playbook?.id ?? 'new'}`}>
             Colour
           </label>
-          <input id={`colour-${playbook?.id ?? 'new'}`} name="colour" type="color" defaultValue={playbook?.colour ?? '#2ee6a6'} className="h-[38px] w-16 p-1" />
+          <input id={`colour-${playbook?.id ?? 'new'}`} name="colour" type="color" defaultValue={playbook?.colour ?? '#4EAA6E'} className="h-[38px] w-16 p-1" />
         </div>
       </div>
       <div>

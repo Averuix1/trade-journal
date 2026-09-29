@@ -148,7 +148,7 @@ export function KeyValue({ label, value, tone }: { label: ReactNode; value: Reac
 export function SectionTitle({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
     <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-mint-200">{children}</h2>
+      <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-dim">{children}</h2>
       {hint && <span className="text-xs text-dim">{hint}</span>}
     </div>
   );

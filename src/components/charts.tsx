@@ -105,7 +105,7 @@ export function BarChart({
         return (
           <div key={`${b.label}-${i}`} className="group relative flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
             <div
-              className={`w-full rounded-t ${up ? 'bg-mint-500/80' : 'bg-loss'}`}
+              className={`w-full rounded-t ${up ? 'bg-profit/80' : 'bg-loss/80'}`}
               style={{ height: Math.max(2, h) }}
               title={`${b.label}: ${format(b.value)}`}
             />
@@ -121,7 +121,7 @@ export function HBar({ pct, tone = 'mint' }: { pct: number; tone?: 'mint' | 'red
   const clamped = Math.max(0, Math.min(100, pct));
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
-      <div className={`h-full ${tone === 'mint' ? 'bg-mint-400' : 'bg-loss'}`} style={{ width: `${clamped}%` }} />
+      <div className={`h-full ${tone === 'mint' ? 'bg-profit' : 'bg-loss'}`} style={{ width: `${clamped}%` }} />
     </div>
   );
 }

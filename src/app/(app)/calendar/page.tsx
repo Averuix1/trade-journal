@@ -169,7 +169,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                 {view === 'week' ? `Week of ${weekAnchor}` : `${monthName(m)} ${year}`}
                 <span
                   className={`tabular rounded-full px-2.5 py-0.5 text-sm font-semibold ${
-                    monthTotal > 0 ? 'chip-on' : monthTotal < 0 ? 'bg-loss-soft text-loss-text' : 'bg-ink-800 text-dim'
+                    monthTotal > 0 ? 'bg-profit/15 text-profit-text' : monthTotal < 0 ? 'bg-loss/15 text-loss-text' : 'bg-ink-800 text-dim'
                   }`}
                 >
                   {fmtSigned(monthTotal)}
@@ -233,7 +233,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
               {d}
             </div>
           ))}
-          <div className="pb-1 text-center text-[10px] uppercase tracking-[0.16em] text-mint-200">
+          <div className="pb-1 text-center text-[10px] uppercase tracking-[0.14em] text-dim">
             Week
             <div className="text-[9px] normal-case tracking-normal text-dim">total</div>
           </div>
@@ -257,9 +257,9 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                     : !summary
                       ? 'bg-ink-900/60 text-dim/60'
                       : summary.pnl > 0
-                        ? 'bg-profit text-white'
+                        ? 'bg-profit/15 text-profit-text'
                         : summary.pnl < 0
-                          ? 'bg-loss text-white'
+                          ? 'bg-loss/15 text-loss-text'
                           : 'bg-ink-700 text-fg';
                   return (
                     // Same-page client navigations are cancelled while the route skeleton is showing.

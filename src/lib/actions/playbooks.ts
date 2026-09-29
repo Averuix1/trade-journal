@@ -22,7 +22,7 @@ export async function createPlaybook(_prev: FormState, formData: FormData): Prom
     .values({
       name,
       description: str(formData.get('description')),
-      colour: str(formData.get('colour')) ?? '#2ee6a6',
+      colour: str(formData.get('colour')) ?? '#4EAA6E',
     })
     .returning({ id: playbooks.id });
   const rules = parseRules(str(formData.get('rules')));
@@ -40,7 +40,7 @@ export async function updatePlaybook(_prev: FormState, formData: FormData): Prom
   if (!name) return { error: 'Give the playbook a name.' };
   await db
     .update(playbooks)
-    .set({ name, description: str(formData.get('description')), colour: str(formData.get('colour')) ?? '#2ee6a6' })
+    .set({ name, description: str(formData.get('description')), colour: str(formData.get('colour')) ?? '#4EAA6E' })
     .where(eq(playbooks.id, id));
 
   const existing = await db.select().from(playbookRules).where(eq(playbookRules.playbookId, id));

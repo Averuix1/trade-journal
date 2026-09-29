@@ -46,9 +46,9 @@ export function MiniCalendar({
             : !day || day.trades === 0
               ? 'bg-ink-850/60 text-dim/70'
               : day.pnl > 0
-                ? 'bg-profit/70 text-white'
+                ? 'bg-profit/20 text-profit-text'
                 : day.pnl < 0
-                  ? 'bg-loss/70 text-white'
+                  ? 'bg-loss/20 text-loss-text'
                   : 'bg-ink-700 text-fg';
           return (
             <Link
