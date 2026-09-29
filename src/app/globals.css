@@ -49,6 +49,10 @@
 }
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   html,
   body {
     @apply bg-ink-950 text-fg;
@@ -122,6 +126,7 @@
 @layer components {
   .app-header {
     background: rgb(var(--ink-950));
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
   }
 
   .card {
@@ -199,4 +204,95 @@
 
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Warm paper. Dark charcoal stays on :root and is unchanged. */
+[data-theme='light'] {
+  color-scheme: light;
+  --ink-950: 247 247 245; /* #F7F7F5 page */
+  --ink-900: 255 255 255; /* cards */
+  --ink-850: 244 243 241; /* #F4F3F1 */
+  --ink-800: 239 237 234;
+  --ink-700: 231 229 228; /* #E7E5E4 */
+  --ink-600: 214 211 209;
+  --ink-500: 168 166 163;
+
+  --line: 231 229 228;
+  --line-soft: 238 236 234;
+  --line-bright: 212 209 206;
+
+  --fg: 17 17 17; /* #111111 */
+  --fg-strong: 12 12 12;
+  --dim: 107 107 112; /* #6B6B70 */
+
+  /* Near-black accent so buttons, the equity line and gauges follow the same tokens. */
+  --mint-100: 17 17 17;
+  --mint-200: 17 17 17;
+  --mint-300: 42 42 46;
+  --mint-400: 17 17 17;
+  --mint-500: 17 17 17;
+  --mint-600: 68 68 72;
+
+  --profit: 31 122 77; /* #1F7A4D */
+  --profit-soft: 232 243 236;
+  --profit-text: 31 122 77;
+
+  --loss: 180 68 58; /* #B4443A */
+  --loss-soft: 248 236 234;
+  --loss-text: 180 68 58;
+
+  --warn: 138 98 32;
+  --warn-soft: 247 241 230;
+  --warn-line: 196 176 140;
+
+  --on-accent: 255 255 255;
+}
+
+[data-theme='light'] ::selection {
+  background: rgb(17 17 17 / 0.12);
+  color: rgb(var(--fg));
+}
+
+[data-theme='light'] input:focus,
+[data-theme='light'] select:focus,
+[data-theme='light'] textarea:focus {
+  border-color: rgb(17 17 17 / 0.45);
+  box-shadow: 0 0 0 1px rgb(17 17 17 / 0.12);
+}
+
+[data-theme='light'] ::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+[data-theme='light'] .app-header {
+  background: #fff;
+  border-bottom-color: #e7e5e4;
+}
+
+[data-theme='light'] .card {
+  border-color: #e7e5e4;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+[data-theme='light'] .chip-on,
+[data-theme='light'] .pill-on {
+  background: #111111;
+  color: #fff;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+[data-theme='light'] .btn-primary:hover {
+  background: #2a2a2e;
+}
+
+/* Keep coloured figures readable on the pale day tints. #1F7A4D on a 10% wash is about 4.7:1. */
+[data-theme='light'] .bg-profit\/15,
+[data-theme='light'] .bg-profit\/20 {
+  background-color: rgb(var(--profit) / 0.1);
+}
+
+[data-theme='light'] .bg-loss\/15,
+[data-theme='light'] .bg-loss\/20 {
+  background-color: rgb(var(--loss) / 0.1);
 }

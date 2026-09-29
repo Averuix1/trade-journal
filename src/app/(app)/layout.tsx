@@ -41,7 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen">
-      <header className="app-header sticky top-0 z-30 border-b border-white/[0.08] bg-ink-950">
+      <header className="app-header sticky top-0 z-30">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
           <Link href="/" className="mr-1 text-sm font-semibold tracking-[0.18em] text-fg">
             TJ

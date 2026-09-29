@@ -1,3 +1,4 @@
+import { ThemeSetting } from '@/components/theme-setting';
 import { Card } from '@/components/ui';
 import { ChecklistForm, GeneralSettingsForm, InstrumentsForm, MistakeTagForm, SessionsForm } from '@/components/settings-forms';
 import { deleteMistakeTag, deleteSession } from '@/lib/actions/settings';
@@ -18,6 +19,10 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-5">
+      <Card title="Appearance">
+        <ThemeSetting />
+      </Card>
+
       <Card title="General">
         <GeneralSettingsForm config={config} />
       </Card>

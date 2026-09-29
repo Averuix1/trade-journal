@@ -187,7 +187,7 @@ export default async function DeskPage() {
                         >
                           <span className="font-medium text-loss-text">DUMP</span>
                           <span className="flex items-center gap-2">
-                            <span className="text-white">{trade.symbol}</span>
+                            <span className="text-fg">{trade.symbol}</span>
                             <MoneyText value={trade.pnl} />
                           </span>
                         </div>
