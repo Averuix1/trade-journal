@@ -76,7 +76,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Nav />
         </div>
       </header>
-      <main className="mx-auto max-w-[1500px] px-4 py-5">{children}</main>
+      <main className="mx-auto min-w-0 max-w-[1500px] overflow-x-clip px-4 py-5">{children}</main>
       <footer className="mx-auto max-w-[1500px] px-4 pb-10 pt-4 text-[11px] text-dim">
         Times shown in {config.timezone}. Sessions and trading days are New York time.
       </footer>

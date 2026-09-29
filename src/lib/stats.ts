@@ -1,6 +1,6 @@
 import type { Trade } from '@/lib/db/schema';
-import { round2 } from '@/lib/calc';
-import { isoWeekKey, weekdayOf } from '@/lib/time';
+import { inWindow, minutesSinceOpen, round2 } from '@/lib/calc';
+import { formatMonthLabel, isoWeekKey, minuteOfDay, monthKeyOf, NY_TZ, weekdayOf } from '@/lib/time';
 
 export type Outcome = 'WIN' | 'LOSS' | 'BE';
 
@@ -329,6 +329,88 @@ export function weekdayBreakdown(trades: Trade[], beBandR: number): Breakdown[] 
 
 export function weekBreakdown(trades: Trade[], beBandR: number): Breakdown[] {
   return breakdown(trades, beBandR, (t) => isoWeekKey(t.tradeDate)).sort((a, b) => a.key.localeCompare(b.key));
+}
+
+/**
+ * One row per calendar month of the trading day (US Eastern, stored on `tradeDate`).
+ * Newest month first.
+ */
+export function monthBreakdown(trades: Trade[], beBandR: number): Breakdown[] {
+  return breakdown(trades, beBandR, (t) => monthKeyOf(t.tradeDate), formatMonthLabel).sort((a, b) =>
+    b.key.localeCompare(a.key),
+  );
+}
+
+/**
+ * Width of the open and close buckets, in minutes. The second bucket is the
+ * following block of the same length. Change this to resize every label and cut.
+ */
+export const ENTRY_EDGE_MINS = 30;
+
+export type SessionWindow = { key: string; startMinute: number; endMinute: number };
+
+export type TimingBucket = 'open-0' | 'open-1' | 'middle' | 'close' | 'after' | 'none';
+
+export function sessionLengthMinutes(startMinute: number, endMinute: number): number {
+  if (endMinute > startMinute) return endMinute - startMinute;
+  return 1440 - startMinute + endMinute;
+}
+
+export function entryTimingLabel(key: TimingBucket, edge = ENTRY_EDGE_MINS): string {
+  switch (key) {
+    case 'open-0':
+      return `First ${edge} minutes after the open`;
+    case 'open-1':
+      return `${edge} to ${edge * 2} minutes after the open`;
+    case 'middle':
+      return 'Middle of the session';
+    case 'close':
+      return `Last ${edge} minutes before the close`;
+    case 'after':
+      return 'After the close';
+    case 'none':
+      return 'No time entered';
+  }
+}
+
+const TIMING_ORDER: TimingBucket[] = ['open-0', 'open-1', 'middle', 'close', 'after', 'none'];
+
+/**
+ * Where the entry sits inside its own session window.
+ * Open-side buckets win until the close bucket; a short session can leave a bucket empty.
+ * Unknown clocks stay in "No time entered" even when the stored time is a placeholder at the open.
+ */
+export function entryTimingKey(
+  trade: Pick<Trade, 'openedAt' | 'timeKnown' | 'sessionKey'>,
+  sessions: SessionWindow[],
+  edge = ENTRY_EDGE_MINS,
+): TimingBucket {
+  if (trade.timeKnown === false) return 'none';
+  const session = sessions.find((s) => s.key === trade.sessionKey);
+  if (!session) return 'after';
+  const minute = minuteOfDay(trade.openedAt, NY_TZ);
+  if (!inWindow(minute, session.startMinute, session.endMinute)) return 'after';
+  const since = minutesSinceOpen(minute, session.startMinute);
+  const length = sessionLengthMinutes(session.startMinute, session.endMinute);
+  if (since < edge) return 'open-0';
+  if (length - since <= edge) return 'close';
+  if (since < edge * 2) return 'open-1';
+  return 'middle';
+}
+
+/** Every bucket, in window order, including ones with no trades. */
+export function entryTimingBreakdown(
+  trades: Trade[],
+  sessions: SessionWindow[],
+  beBandR: number,
+  edge = ENTRY_EDGE_MINS,
+): Breakdown[] {
+  const groups = groupBy(trades, (t) => entryTimingKey(t, sessions, edge));
+  return TIMING_ORDER.map((key) => ({
+    key,
+    label: entryTimingLabel(key, edge),
+    stats: computeStats(groups.get(key) ?? [], beBandR),
+  }));
 }
 
 /** How often the next slot in a session actually fires after the previous one. */

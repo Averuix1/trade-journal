@@ -128,7 +128,7 @@
   }
 
   .card {
-    @apply rounded-2xl border bg-ink-900/95 backdrop-blur-sm;
+    @apply min-w-0 max-w-full rounded-2xl border bg-ink-900/95 backdrop-blur-sm;
     border-color: rgb(var(--line) / 0.85);
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.05),
@@ -198,7 +198,7 @@
   }
 
   .scroll-x {
-    @apply overflow-x-auto [scrollbar-width:thin];
+    @apply min-w-0 max-w-full overflow-x-auto [scrollbar-width:thin];
   }
 }
 
