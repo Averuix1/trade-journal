@@ -114,7 +114,7 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
               />
             </div>
             {prop && prop.drawdownLimit == null && (
-              <p className="mt-3 text-[11px] text-[#ffd79a]">
+              <p className="mt-3 text-[11px] text-warn">
                 No max drawdown entered for this account —{' '}
                 <Link href={`/accounts/${account.id}`} className="underline">
                   add it
@@ -134,7 +134,7 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
               <Link
                 key={s}
                 href={qs({ stop: s })}
-                className={`rounded-md px-2 py-1 text-xs ${activeStop === s ? 'bg-mint-500/20 text-mint-200' : 'bg-ink-850 text-dim'}`}
+                className={`rounded-md px-2 py-1 text-xs ${activeStop === s ? 'chip-on' : 'bg-ink-850 text-dim'}`}
               >
                 {s} pt
               </Link>
@@ -163,7 +163,7 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
                   return (
                     <tr key={inst.symbol}>
                       <td className="py-1.5">
-                        <span className="font-medium text-[#e6fff5]">{inst.symbol}</span>
+                        <span className="font-medium text-fg-strong">{inst.symbol}</span>
                         <span className="ml-2 text-xs text-dim">{inst.name}</span>
                       </td>
                       <td className="text-right text-dim">$ / R only</td>
@@ -181,20 +181,20 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
                 return (
                   <tr key={inst.symbol}>
                     <td className="py-1.5">
-                      <span className="font-medium text-[#e6fff5]">{inst.symbol}</span>
+                      <span className="font-medium text-fg-strong">{inst.symbol}</span>
                       <span className="ml-2 text-xs text-dim">{inst.name}</span>
                     </td>
                     <td className="text-right text-dim">{fmtMoney(pointValue)}</td>
                     {stops.map((s) => {
                       const n = contractsAt(s);
                       return (
-                        <td key={s} className={`text-right ${s === activeStop ? 'text-mint-200' : 'text-[#cdefe2]'}`}>
+                        <td key={s} className={`text-right ${s === activeStop ? 'text-mint-200' : 'text-fg'}`}>
                           {n > 0 ? `${n}x` : <span className="text-dim/60">—</span>}
                         </td>
                       );
                     })}
                     <td className="text-right text-dim">{chosen > 0 ? fmtMoney(actualRisk) : '—'}</td>
-                    <td className="text-right font-medium text-[#e6fff5]">
+                    <td className="text-right font-medium text-fg-strong">
                       {chosen > 0 ? left : <span className="text-dim/60">too big for this risk</span>}
                     </td>
                   </tr>

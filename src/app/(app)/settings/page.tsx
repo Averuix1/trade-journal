@@ -1,3 +1,4 @@
+import { ThemeSetting } from '@/components/theme-setting';
 import { Card } from '@/components/ui';
 import { ChecklistForm, GeneralSettingsForm, InstrumentsForm, MistakeTagForm, SessionsForm } from '@/components/settings-forms';
 import { deleteMistakeTag, deleteSession } from '@/lib/actions/settings';
@@ -18,6 +19,10 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-5">
+      <Card title="Appearance">
+        <ThemeSetting />
+      </Card>
+
       <Card title="General">
         <GeneralSettingsForm config={config} />
       </Card>
@@ -32,7 +37,7 @@ export default async function SettingsPage() {
           {sessions.map((s) => (
             <form key={s.key} action={deleteSession}>
               <input type="hidden" name="key" value={s.key} />
-              <button className="btn btn-sm btn-ghost text-[#ff9aa3]" type="submit">
+              <button className="btn btn-sm btn-ghost text-loss-text" type="submit">
                 Remove {s.name}
               </button>
             </form>
@@ -50,7 +55,7 @@ export default async function SettingsPage() {
           {tags.map((tag) => (
             <form key={tag.id} action={deleteMistakeTag}>
               <input type="hidden" name="id" value={tag.id} />
-              <button className="pill hover:border-[#7a2331] hover:text-[#ff9aa3]" type="submit" title="Remove tag">
+              <button className="pill hover:border-loss hover:text-loss-text" type="submit" title="Remove tag">
                 {tag.name} ✕
               </button>
             </form>

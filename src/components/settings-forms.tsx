@@ -16,7 +16,7 @@ import { TIMEZONES, minutesToClock } from '@/lib/time';
 const initial: FormState = {};
 
 function Feedback({ state }: { state: FormState }) {
-  if (state.error) return <p className="text-sm text-[#ff9aa3]">{state.error}</p>;
+  if (state.error) return <p className="text-sm text-loss-text">{state.error}</p>;
   if (state.message) return <p className="text-sm text-mint-300">{state.message}</p>;
   return null;
 }

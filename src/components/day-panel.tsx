@@ -47,7 +47,7 @@ export function DayPanel({ data }: { data: DayPanelData }) {
     <aside className="fixed inset-y-0 right-0 z-40 flex w-full max-w-2xl flex-col border-l border-line bg-ink-950 shadow-2xl shadow-black/70">
       <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
         <div>
-          <div className="text-sm font-medium text-[#eafff7]">{formatDayLong(data.date)}</div>
+          <div className="text-sm font-medium text-fg-strong">{formatDayLong(data.date)}</div>
           <div className="tabular mt-0.5 text-2xl font-semibold">
             <MoneyText value={pnl} />
             <span className="ml-2 text-sm text-dim">{fmtR(rTotal)}</span>
@@ -74,7 +74,7 @@ export function DayPanel({ data }: { data: DayPanelData }) {
         <div>
           <div className="card-title mb-2">Day performance</div>
           <div className="rounded-xl border border-line bg-ink-900 p-3">
-            <LineChart series={[{ points: curve, colour: pnl >= 0 ? '#22d39a' : '#e05260', label: 'Day' }]} />
+            <LineChart series={[{ points: curve, colour: pnl >= 0 ? 'rgb(var(--mint-400))' : 'rgb(var(--loss))', label: 'Day' }]} />
           </div>
         </div>
 

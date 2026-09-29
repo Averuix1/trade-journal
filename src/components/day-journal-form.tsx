@@ -169,19 +169,19 @@ export function DayJournalForm({
         <div className="space-y-3">
           <div className="label">Pre-trade checklist</div>
           {warnings.map((warning) => (
-            <p key={warning.name} className="rounded-lg border border-[#7a5a23] bg-[#3a2d11]/60 px-3 py-2 text-xs text-[#ffd79a]">
+            <p key={warning.name} className="rounded-lg border border-warn-line bg-warn-soft/70 px-3 py-2 text-xs text-warn">
               {warning.name}: {warning.nos} answers are No. More than {checklistSkipIfNo} means consider skipping this session.
             </p>
           ))}
           {active.map((session) => (
             <div key={session.key} className="rounded-lg border border-line-soft bg-ink-850/40 p-3">
-              <div className="mb-2 text-xs font-medium text-[#cdefe2]">{session.name}</div>
+              <div className="mb-2 text-xs font-medium text-fg">{session.name}</div>
               <div className="space-y-1.5">
                 {checklistItems.map((item, index) => {
                   const current = answers[session.key]?.answers?.[index];
                   const value = current == null ? '' : current ? 'yes' : 'no';
                   return (
-                    <label key={item} className="flex items-center justify-between gap-3 text-xs text-[#cdefe2]">
+                    <label key={item} className="flex items-center justify-between gap-3 text-xs text-fg">
                       <span>{item}</span>
                       <select
                         name={`check_${session.key}_${index}`}
@@ -226,11 +226,11 @@ export function DayJournalForm({
           placeholder="What you saw, what you did, what you would repeat."
         />
       </div>
-      <label className="flex items-center gap-2 text-sm text-[#cdefe2]">
+      <label className="flex items-center gap-2 text-sm text-fg">
         <input type="checkbox" name="satOut" defaultChecked={journal?.satOut ?? false} />
         Sat out / no-trade day
       </label>
-      {state.error && <p className="text-sm text-[#ff9aa3]">{state.error}</p>}
+      {state.error && <p className="text-sm text-loss-text">{state.error}</p>}
       {state.message && <p className="text-sm text-mint-300">{state.message}</p>}
       <button className="btn btn-primary" type="submit" disabled={pending}>
         {pending ? 'Saving…' : 'Save journal'}

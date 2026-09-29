@@ -151,6 +151,13 @@ export function monthName(month: number): string {
   return MONTHS[month - 1];
 }
 
+/** `2026-09` or `2026-09-14` → `Sep 2026`. */
+export function formatMonthLabel(key: string): string {
+  const [year, month] = key.split('-').map(Number);
+  const name = MONTHS[(month || 1) - 1] ?? '';
+  return `${name.slice(0, 3)} ${year}`;
+}
+
 export function formatDayLong(key: string): string {
   const d = parseDateKey(key);
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()].slice(0, 3)} ${d.getUTCFullYear()}`;

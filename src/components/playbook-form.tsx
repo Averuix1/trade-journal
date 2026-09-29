@@ -30,7 +30,7 @@ export function PlaybookForm({ playbook, rules }: { playbook?: Playbook; rules?:
           <label className="label" htmlFor={`colour-${playbook?.id ?? 'new'}`}>
             Colour
           </label>
-          <input id={`colour-${playbook?.id ?? 'new'}`} name="colour" type="color" defaultValue={playbook?.colour ?? '#22d39a'} className="h-[38px] w-16 p-1" />
+          <input id={`colour-${playbook?.id ?? 'new'}`} name="colour" type="color" defaultValue={playbook?.colour ?? '#4EAA6E'} className="h-[38px] w-16 p-1" />
         </div>
       </div>
       <div>
@@ -46,7 +46,7 @@ export function PlaybookForm({ playbook, rules }: { playbook?: Playbook; rules?:
           placeholder={'Level marked before the open\nWaited for the retest\nStop behind structure\nRisk within plan'}
         />
       </div>
-      {state.error && <p className="text-sm text-[#ff9aa3]">{state.error}</p>}
+      {state.error && <p className="text-sm text-loss-text">{state.error}</p>}
       {state.message && <p className="text-sm text-mint-300">{state.message}</p>}
       <button className="btn btn-primary" type="submit" disabled={pending}>
         {pending ? 'Saving…' : playbook ? 'Save playbook' : 'Create playbook'}

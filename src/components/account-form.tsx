@@ -43,7 +43,7 @@ export function AccountForm({
               }`}
             >
               <input type="radio" name="type" value={option.value} checked={type === option.value} onChange={() => setType(option.value)} className="sr-only" />
-              <div className="text-sm font-medium text-[#e6fff5]">{option.label}</div>
+              <div className="text-sm font-medium text-fg-strong">{option.label}</div>
               <div className="text-[11px] text-dim">{option.hint}</div>
             </label>
           ))}
@@ -218,7 +218,7 @@ export function AccountForm({
         <div className="grid gap-2 sm:grid-cols-2">
           {sessions.map((session) => (
             <div key={session.key} className="flex items-center gap-3 rounded-lg border border-line-soft bg-ink-850/50 px-3 py-2">
-              <label className="flex flex-1 items-center gap-2 text-sm text-[#cdefe2]">
+              <label className="flex flex-1 items-center gap-2 text-sm text-fg">
                 <input type="checkbox" name="sessions" value={session.key} defaultChecked={active.includes(session.key)} />
                 {session.name}
                 <span className="text-[11px] text-dim">
@@ -241,7 +241,7 @@ export function AccountForm({
         <textarea id="notes" name="notes" rows={2} defaultValue={account?.notes ?? ''} className="field" />
       </div>
 
-      {state.error && <p className="rounded-lg border border-[#7a2331] bg-[#3a1119] px-3 py-2 text-sm text-[#ff9aa3]">{state.error}</p>}
+      {state.error && <p className="rounded-lg border border-loss bg-loss-soft px-3 py-2 text-sm text-loss-text">{state.error}</p>}
 
       <div className="flex items-center gap-2">
         <button className="btn btn-primary" type="submit" disabled={pending}>

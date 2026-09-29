@@ -18,7 +18,7 @@ export function AccountSwitcher({ groups, current }: { groups: Group[]; current:
     <Dropdown
       menuClassName="left-0 max-h-[70vh] w-72 overflow-y-auto"
       label={() => (
-        <span className="flex items-center gap-2 rounded-lg border border-line bg-ink-850 px-3 py-1.5 text-sm font-semibold text-[#e6fff5] hover:border-line-bright">
+        <span className="flex items-center gap-2 rounded-lg border border-line bg-ink-850 px-3 py-1.5 text-sm font-semibold text-fg-strong hover:border-line-bright">
           <span className="max-w-[16rem] truncate">{current ? current.name : 'All accounts'}</span>
           <svg viewBox="0 0 12 12" className="h-3 w-3 text-dim" aria-hidden>
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -33,7 +33,7 @@ export function AccountSwitcher({ groups, current }: { groups: Group[]; current:
               name="accountId"
               value="all"
               className={`w-full rounded-lg px-3 py-2 text-left text-sm ${
-                current == null ? 'bg-mint-500/15 text-mint-200' : 'text-[#cdefe2] hover:bg-ink-800'
+                current == null ? 'chip-on' : 'text-fg hover:bg-ink-800'
               }`}
             >
               All accounts
@@ -49,7 +49,7 @@ export function AccountSwitcher({ groups, current }: { groups: Group[]; current:
                     name="accountId"
                     value={account.id}
                     className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm ${
-                      current?.id === account.id ? 'bg-mint-500/15 text-mint-200' : 'text-[#cdefe2] hover:bg-ink-800'
+                      current?.id === account.id ? 'chip-on' : 'text-fg hover:bg-ink-800'
                     }`}
                   >
                     <span className="truncate">{account.name}</span>

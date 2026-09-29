@@ -3,13 +3,14 @@ import { HBar } from '@/components/charts';
 import { fmtHold, fmtNum, fmtPct, fmtR } from '@/lib/format';
 import type { Breakdown } from '@/lib/stats';
 
-type Column = 'trades' | 'winRate' | 'avgWin' | 'avgLoss' | 'avgR' | 'pf' | 'hold' | 'winHold' | 'lossHold' | 'bar';
+type Column = 'trades' | 'winRate' | 'avgWin' | 'avgLoss' | 'totalR' | 'avgR' | 'pf' | 'hold' | 'winHold' | 'lossHold' | 'bar';
 
 const HEADERS: Record<Column, string> = {
   trades: 'Trades',
   winRate: 'Win %',
   avgWin: 'Avg win',
   avgLoss: 'Avg loss',
+  totalR: 'Total R',
   avgR: 'Avg R',
   pf: 'PF',
   hold: 'Hold',
@@ -35,7 +36,7 @@ export function BreakdownTable({
       <table className="tabular">
         <thead>
           <tr>
-            <th className="py-1.5">Name</th>
+            <th className="sticky left-0 z-10 bg-ink-900 py-1.5 pr-3">Name</th>
             <th className="text-right">P&L</th>
             {columns.map((c) => (
               <th key={c} className={c === 'bar' ? 'w-24' : 'text-right'}>
@@ -47,18 +48,19 @@ export function BreakdownTable({
         <tbody className="divide-rows">
           {rows.map((row) => (
             <tr key={row.key}>
-              <td className="py-1.5 text-[#cdefe2]">{row.label}</td>
-              <td className="text-right">
+              <td className="sticky left-0 z-10 whitespace-nowrap bg-ink-900 py-1.5 pr-3 text-fg">{row.label}</td>
+              <td className="whitespace-nowrap text-right">
                 <MoneyText value={row.stats.totalPnl} />
               </td>
               {columns.map((c) => (
-                <td key={c} className={c === 'bar' ? '' : 'text-right text-dim'}>
+                <td key={c} className={c === 'bar' ? 'min-w-[4.5rem]' : 'whitespace-nowrap text-right text-dim'}>
                   {c === 'trades' && row.stats.trades}
-                  {c === 'winRate' && fmtPct(row.stats.winRate)}
+                  {c === 'winRate' && (row.stats.trades ? fmtPct(row.stats.winRate) : '—')}
                   {c === 'avgWin' && <MoneyText value={row.stats.avgWin} />}
                   {c === 'avgLoss' && <MoneyText value={-row.stats.avgLoss} />}
-                  {c === 'avgR' && fmtR(row.stats.avgR)}
-                  {c === 'pf' && fmtNum(row.stats.profitFactor)}
+                  {c === 'totalR' && (row.stats.trades ? fmtR(row.stats.totalR) : '—')}
+                  {c === 'avgR' && (row.stats.trades ? fmtR(row.stats.avgR) : '—')}
+                  {c === 'pf' && (row.stats.trades ? (row.stats.profitFactor == null ? '∞' : fmtNum(row.stats.profitFactor)) : '—')}
                   {c === 'hold' && fmtHold(row.stats.avgHoldMins)}
                   {c === 'winHold' && fmtHold(row.stats.winHoldMins)}
                   {c === 'lossHold' && fmtHold(row.stats.lossHoldMins)}

@@ -253,7 +253,7 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
                       </form>
                       <form action={deleteTrade} className="inline">
                         <input type="hidden" name="id" value={t.id} />
-                        <button className="btn btn-sm btn-ghost text-[#ff9aa3]" type="submit">
+                        <button className="btn btn-sm btn-ghost text-loss-text" type="submit">
                           Delete
                         </button>
                       </form>

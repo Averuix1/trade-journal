@@ -14,7 +14,7 @@ import {
   getTrades,
 } from '@/lib/queries';
 import { computeDayStats, computeStats, groupByDay, type DaySummary } from '@/lib/stats';
-import { fmtMoney, fmtPct, fmtR, fmtSigned } from '@/lib/format';
+import { fmtMoney, fmtPct, fmtR, fmtRShort, fmtSigned, fmtSignedCompact } from '@/lib/format';
 import { addDays, daysInMonth, isoWeekKey, monthName, startOfWeek, todayKey } from '@/lib/time';
 import { BREAK_LABELS } from '@/lib/defaults';
 
@@ -44,7 +44,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const view = one(params.view) === 'week' ? 'week' : 'month';
   const sessionFilter = one(params.session) ?? 'all';
   const systemFilter = one(params.system) ?? 'all';
-  const show = one(params.show) === 'r' ? 'r' : 'dollars';
   const selectedDay = one(params.day);
   const weekAnchor = one(params.week) ?? startOfWeek(today);
 
@@ -86,6 +85,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
   const stats = computeStats(filtered, config.beBandR);
   const dayStats = computeDayStats(dayList);
   const monthTotal = stats.totalPnl;
+  const monthR = dayList.reduce((sum, d) => sum + d.r, 0);
 
   const gridStart = view === 'week' ? weekAnchor : startOfWeek(monthStart);
   const weeksToRender = view === 'week' ? 1 : 6;
@@ -106,9 +106,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
     weeks.push({ key: isoWeekKey(rowStart), days: rowDays, weekendKeys });
   }
 
-  const displayValue = (summary: DaySummary | undefined) =>
-    !summary ? '' : show === 'r' ? fmtR(summary.r) : fmtSigned(summary.pnl);
-
   const qs = (overrides: Record<string, string | undefined>) => {
     const next = new URLSearchParams();
     const base: Record<string, string | undefined> = {
@@ -116,7 +113,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
       view: view === 'week' ? 'week' : undefined,
       session: sessionFilter === 'all' ? undefined : sessionFilter,
       system: systemFilter === 'all' ? undefined : systemFilter,
-      show: show === 'r' ? 'r' : undefined,
       week: view === 'week' ? weekAnchor : undefined,
       day: selectedDay,
       ...overrides,
@@ -152,10 +148,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
       <Card bodyClassName="px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1 rounded-lg border border-line bg-ink-850 p-0.5">
-            <Link href={qs({ view: undefined })} className={`rounded-md px-3 py-1 text-xs ${view === 'month' ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}>
+            <Link href={qs({ view: undefined })} className={`rounded-md px-3 py-1 text-xs ${view === 'month' ? 'chip-on' : 'text-dim'}`}>
               Month
             </Link>
-            <Link href={qs({ view: 'week', week: startOfWeek(today) })} className={`rounded-md px-3 py-1 text-xs ${view === 'week' ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}>
+            <Link href={qs({ view: 'week', week: startOfWeek(today) })} className={`rounded-md px-3 py-1 text-xs ${view === 'week' ? 'chip-on' : 'text-dim'}`}>
               Week
             </Link>
           </div>
@@ -169,14 +165,15 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
               ‹
             </Link>
             <div className="text-center">
-              <div className="flex items-center gap-2 text-lg font-semibold tracking-tight text-[#eafff7]">
+              <div className="flex items-center gap-2 text-lg font-semibold tracking-tight text-fg-strong">
                 {view === 'week' ? `Week of ${weekAnchor}` : `${monthName(m)} ${year}`}
                 <span
                   className={`tabular rounded-full px-2.5 py-0.5 text-sm font-semibold ${
-                    monthTotal > 0 ? 'bg-mint-500/20 text-mint-200' : monthTotal < 0 ? 'bg-[#3a1119] text-[#ff9aa3]' : 'bg-ink-800 text-dim'
+                    monthTotal > 0 ? 'bg-profit/15 text-profit-text' : monthTotal < 0 ? 'bg-loss/15 text-loss-text' : 'bg-ink-800 text-dim'
                   }`}
                 >
                   {fmtSigned(monthTotal)}
+                  <span className="ml-1.5 text-xs font-medium opacity-80">{fmtR(monthR)}</span>
                 </span>
               </div>
               <div className="text-[11px] text-dim">
@@ -202,26 +199,17 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                 <Link
                   key={option.key}
                   href={qs({ system: option.key === 'all' ? undefined : option.key })}
-                  className={`rounded-md px-2.5 py-1 text-xs ${systemFilter === option.key ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}
+                  className={`rounded-md px-2.5 py-1 text-xs ${systemFilter === option.key ? 'chip-on' : 'text-dim'}`}
                 >
                   {option.label}
                 </Link>
               ))}
-            </div>
-            <div className="flex items-center gap-1 rounded-lg border border-line bg-ink-850 p-0.5">
-              <Link href={qs({ show: undefined })} className={`rounded-md px-2.5 py-1 text-xs ${show === 'dollars' ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}>
-                $
-              </Link>
-              <Link href={qs({ show: 'r' })} className={`rounded-md px-2.5 py-1 text-xs ${show === 'r' ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}>
-                R
-              </Link>
             </div>
             <form>
               {view === 'week' && <input type="hidden" name="week" value={weekAnchor} />}
               {view === 'week' && <input type="hidden" name="view" value="week" />}
               <input type="hidden" name="month" value={month} />
               {systemFilter !== 'all' && <input type="hidden" name="system" value={systemFilter} />}
-              {show === 'r' && <input type="hidden" name="show" value="r" />}
               <select name="session" defaultValue={sessionFilter} className="text-xs" aria-label="Session filter">
                 <option value="all">All sessions</option>
                 {sessions.map((s) => (
@@ -239,13 +227,13 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
       </Card>
 
       <Card bodyClassName="p-3 sm:p-4">
-        <div className="grid grid-cols-[repeat(5,minmax(0,1fr))_minmax(90px,0.75fr)] gap-2">
+        <div className="grid grid-cols-[repeat(5,minmax(0,1fr))_minmax(64px,0.75fr)] gap-1 sm:grid-cols-[repeat(5,minmax(0,1fr))_minmax(90px,0.75fr)] sm:gap-2">
           {DOW.map((d) => (
             <div key={d} className="pb-1 text-center text-[10px] uppercase tracking-[0.16em] text-dim">
               {d}
             </div>
           ))}
-          <div className="pb-1 text-center text-[10px] uppercase tracking-[0.16em] text-[#9fd3c2]">
+          <div className="pb-1 text-center text-[10px] uppercase tracking-[0.14em] text-dim">
             Week
             <div className="text-[9px] normal-case tracking-normal text-dim">total</div>
           </div>
@@ -254,6 +242,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
             const weekKeys = [...week.days.filter(Boolean), ...week.weekendKeys] as string[];
             const weekDays = weekKeys.map((k) => days.get(k)).filter(Boolean) as DaySummary[];
             const weekTotal = weekDays.reduce((sum, d) => sum + d.pnl, 0);
+            const weekR = weekDays.reduce((sum, d) => sum + d.r, 0);
             const weekTrades = weekDays.reduce((sum, d) => sum + d.trades, 0);
             return (
               <div key={week.key} className="contents">
@@ -268,48 +257,61 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                     : !summary
                       ? 'bg-ink-900/60 text-dim/60'
                       : summary.pnl > 0
-                        ? 'bg-profit text-[#e6fff3]'
+                        ? 'bg-profit/15 text-profit-text'
                         : summary.pnl < 0
-                          ? 'bg-loss text-[#ffe7ea]'
-                          : 'bg-ink-700 text-[#cdefe2]';
+                          ? 'bg-loss/15 text-loss-text'
+                          : 'bg-ink-700 text-fg';
                   return (
                     // Same-page client navigations are cancelled while the route skeleton is showing.
                     <a
                       key={key}
                       href={qs({ day: key })}
-                      className={`relative flex min-h-[86px] flex-col rounded-xl px-2 py-1.5 transition hover:ring-2 hover:ring-mint-400/50 ${tone} ${
+                      className={`relative flex min-h-[86px] min-w-0 flex-col rounded-lg px-1 py-1 transition sm:rounded-xl sm:px-2 sm:py-1.5 hover:ring-2 hover:ring-mint-400/50 ${tone} ${
                         selectedDay === key ? 'ring-2 ring-mint-300' : ''
                       } ${isToday ? 'ring-1 ring-mint-400/40' : ''}`}
                     >
                       <span className="text-[10px] font-medium opacity-70">{Number(key.slice(8))}</span>
                       {summary && !isHidden && (
-                        <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: summary.breaks ? '#ff6b7a' : '#4fe8b1' }} />
+                        <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: summary.breaks ? 'rgb(var(--loss-text))' : 'rgb(var(--mint-300))' }} />
                       )}
-                      <div className="flex flex-1 flex-col items-center justify-center">
+                      <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
                         {isHidden ? (
-                          <span className="text-[10px] uppercase tracking-widest text-dim">Hidden</span>
+                          <span className="text-[9px] uppercase tracking-widest text-dim sm:text-[10px]">Hidden</span>
                         ) : summary ? (
                           <>
-                            <span className="tabular text-sm font-semibold">{displayValue(summary)}</span>
-                            <span className="text-[10px] opacity-70">
+                            <span className="tabular whitespace-nowrap text-[11px] font-semibold leading-tight sm:text-sm">
+                              <span className="sm:hidden">{fmtSignedCompact(summary.pnl)}</span>
+                              <span className="hidden sm:inline">{fmtSigned(summary.pnl)}</span>
+                            </span>
+                            <span className="tabular whitespace-nowrap text-[9px] font-medium leading-tight opacity-80 max-[299px]:hidden sm:text-[11px]">
+                              <span className="min-[360px]:hidden">{fmtRShort(summary.r)}</span>
+                              <span className="max-[359px]:hidden">{fmtR(summary.r)}</span>
+                            </span>
+                            <span className="mt-0.5 hidden text-[10px] opacity-70 sm:block">
                               {summary.trades} trade{summary.trades === 1 ? '' : 's'}
                             </span>
                           </>
                         ) : journal?.satOut ? (
-                          <span className="text-[10px] uppercase tracking-widest text-dim">Sat out</span>
+                          <span className="text-[9px] uppercase tracking-widest text-dim sm:text-[10px]">Sat out</span>
                         ) : null}
                       </div>
                     </a>
                   );
                 })}
-                <div className="flex min-h-[86px] flex-col items-center justify-center rounded-xl bg-ink-850/80 px-2 py-1.5">
+                <div className="flex min-h-[86px] min-w-0 flex-col items-center justify-center rounded-lg bg-ink-850/80 px-1 py-1 text-center sm:rounded-xl sm:px-2 sm:py-1.5">
                   <span className="text-[9px] uppercase tracking-widest text-dim">{week.key.split('-')[1]}</span>
                   {weekDays.length ? (
                     <>
-                      <span className={`tabular mt-1 text-sm font-semibold ${weekTotal > 0 ? 'text-[#7df3bd]' : weekTotal < 0 ? 'text-[#ff8c96]' : 'text-dim'}`}>
-                        {show === 'r' ? fmtR(weekDays.reduce((s, d) => s + d.r, 0)) : fmtSigned(weekTotal)}
+                      <span
+                        className={`tabular mt-1 flex flex-col leading-tight ${weekTotal > 0 ? 'text-profit-text' : weekTotal < 0 ? 'text-loss-text' : 'text-dim'}`}
+                      >
+                        <span className="whitespace-nowrap text-[11px] font-semibold sm:text-sm">
+                          <span className="sm:hidden">{fmtSignedCompact(weekTotal)}</span>
+                          <span className="hidden sm:inline">{fmtSigned(weekTotal)}</span>
+                        </span>
+                        <span className="whitespace-nowrap text-[9px] font-medium opacity-80 sm:text-[11px]">{fmtR(weekR)}</span>
                       </span>
-                      <span className="text-[10px] text-dim">{weekTrades} trades</span>
+                      <span className="text-[9px] text-dim sm:text-[10px]">{weekTrades} trades</span>
                       {week.weekendKeys.length > 0 && <span className="text-[9px] text-dim">incl. weekend</span>}
                     </>
                   ) : (
@@ -344,7 +346,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
         </Card>
         <Card title="P&L">
           <StatGrid cols={4}>
-            <Stat label="Total" value={fmtSigned(monthTotal)} size="sm" tone={monthTotal >= 0 ? 'up' : 'down'} />
+            <Stat label="Total" value={fmtSigned(monthTotal)} size="sm" tone={monthTotal >= 0 ? 'up' : 'down'} sub={fmtR(monthR)} />
             <Stat label="Avg daily" value={fmtSigned(dayStats.avgDaily)} size="sm" tone={dayStats.avgDaily >= 0 ? 'up' : 'down'} />
             <Stat label="Best" value={fmtMoney(dayStats.bestDay?.pnl ?? 0)} size="sm" tone="up" />
             <Stat label="Worst" value={fmtMoney(dayStats.worstDay?.pnl ?? 0)} size="sm" tone="down" />

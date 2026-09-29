@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { DaySummary } from '@/lib/stats';
+import { fmtR, fmtRShort, fmtSigned, fmtSignedCompact } from '@/lib/format';
 import { daysInMonth, monthName, parseDateKey } from '@/lib/time';
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -22,7 +23,7 @@ export function MiniCalendar({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-[#e6fff5]">
+        <span className="text-sm font-medium text-fg-strong">
           {monthName(m)} {year}
         </span>
         <Link href={`/calendar?month=${month}`} className="text-[11px] text-mint-300 hover:underline">
@@ -39,23 +40,30 @@ export function MiniCalendar({
           if (!key) return <div key={`e${i}`} />;
           const day = days.get(key);
           const hidden = hiddenDays.has(key);
+          const hasTrades = Boolean(day && day.trades > 0 && !hidden);
           const tone = hidden
             ? 'bg-ink-800 text-dim'
             : !day || day.trades === 0
               ? 'bg-ink-850/60 text-dim/70'
               : day.pnl > 0
-                ? 'bg-profit/70 text-[#d8ffec]'
+                ? 'bg-profit/20 text-profit-text'
                 : day.pnl < 0
-                  ? 'bg-loss/70 text-[#ffd8dc]'
-                  : 'bg-ink-700 text-[#cdefe2]';
+                  ? 'bg-loss/20 text-loss-text'
+                  : 'bg-ink-700 text-fg';
           return (
             <Link
               key={key}
               href={`/calendar?month=${key.slice(0, 7)}&day=${key}`}
-              className={`flex aspect-square items-center justify-center rounded-md text-[10px] font-medium transition hover:ring-1 hover:ring-mint-400/50 ${tone}`}
-              title={day ? `${key}: ${day.pnl}` : key}
+              className={`flex min-h-[44px] min-w-0 flex-col items-center justify-center overflow-hidden rounded-md px-0.5 py-0.5 font-medium leading-tight transition hover:ring-1 hover:ring-mint-400/50 ${tone}`}
+              title={day ? `${key}: ${fmtSigned(day.pnl)} · ${fmtR(day.r)}` : key}
             >
-              {Number(key.slice(8))}
+              <span className={hasTrades ? 'text-[8px] opacity-70' : 'text-[10px]'}>{Number(key.slice(8))}</span>
+              {hasTrades && day && (
+                <>
+                  <span className="tabular whitespace-nowrap text-[9px] font-semibold">{fmtSignedCompact(day.pnl)}</span>
+                  <span className="tabular whitespace-nowrap text-[8px] opacity-80">{fmtRShort(day.r)}</span>
+                </>
+              )}
             </Link>
           );
         })}

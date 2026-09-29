@@ -90,7 +90,7 @@ export default async function DeskPage() {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-lg font-semibold tracking-tight text-[#eafff7]">
+              <h1 className="text-lg font-semibold tracking-tight text-fg-strong">
                 {scope.account?.name ?? 'All accounts'}
               </h1>
               {scope.account?.type === 'PROP' && (
@@ -100,7 +100,7 @@ export default async function DeskPage() {
               )}
               {scope.account?.type === 'PERSONAL' && <Badge>Personal</Badge>}
             </div>
-            <div className="tabular mt-1 text-4xl font-semibold tracking-tight text-[#eafff7]">{fmtMoney(balance)}</div>
+            <div className="tabular mt-1 text-4xl font-semibold tracking-tight text-fg-strong">{fmtMoney(balance)}</div>
             <div className="mt-1 text-sm text-dim">
               <MoneyText value={change} /> from {fmtMoney(startBalance)} · ROI {fmtPct(roi)}
               {prop && ` · payouts ${fmtMoney(payouts)}`}
@@ -151,7 +151,7 @@ export default async function DeskPage() {
                 return (
                   <div key={session.key} className="rounded-xl border border-line bg-ink-850/60 p-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#e6fff5]">{session.name}</span>
+                      <span className="text-sm font-medium text-fg-strong">{session.name}</span>
                       <span className="pill">
                         {taken.length}/{cap} trades
                       </span>
@@ -171,7 +171,7 @@ export default async function DeskPage() {
                           <span className="font-medium text-dim">T{i + 1}</span>
                           {trade ? (
                             <span className="flex items-center gap-2">
-                              <span className="text-[#cdefe2]">{trade.symbol}</span>
+                              <span className="text-fg">{trade.symbol}</span>
                               <MoneyText value={trade.pnl} />
                               <span className="tabular text-dim">{fmtR(trade.rMultiple)}</span>
                             </span>
@@ -183,11 +183,11 @@ export default async function DeskPage() {
                       {extras.map((trade) => (
                         <div
                           key={trade.id}
-                          className="flex items-center justify-between rounded-lg bg-[#3a1119] px-2.5 py-1.5 text-xs"
+                          className="flex items-center justify-between rounded-lg bg-loss-soft px-2.5 py-1.5 text-xs"
                         >
-                          <span className="font-medium text-[#ff9aa3]">DUMP</span>
+                          <span className="font-medium text-loss-text">DUMP</span>
                           <span className="flex items-center gap-2">
-                            <span className="text-[#ffd8dc]">{trade.symbol}</span>
+                            <span className="text-fg">{trade.symbol}</span>
                             <MoneyText value={trade.pnl} />
                           </span>
                         </div>
@@ -206,7 +206,7 @@ export default async function DeskPage() {
                   <span className="text-dim">
                     {fmtMoney(pace.start)} → {fmtMoney(pace.target)}
                   </span>
-                  <span className="tabular font-medium text-[#e6fff5]">{fmtPct(pace.pct, 0)}</span>
+                  <span className="tabular font-medium text-fg-strong">{fmtPct(pace.pct, 0)}</span>
                 </div>
                 <ProgressBar pct={pace.pct} />
               </div>
@@ -232,7 +232,7 @@ export default async function DeskPage() {
           )}
 
           <Card title="Equity" action={<span className="text-[11px] text-dim">Daily, from account start</span>}>
-            <LineChart series={[{ points: equity, colour: '#22d39a', label: 'Balance' }]} baseline={prop?.drawdownLine ?? undefined} showZero={false} />
+            <LineChart series={[{ points: equity, colour: 'rgb(var(--mint-400))', label: 'Balance' }]} baseline={prop?.drawdownLine ?? undefined} showZero={false} />
             {prop?.drawdownLine != null && (
               <p className="mt-2 text-[11px] text-dim">Red line is your drawdown cut-off at {fmtMoney(prop.drawdownLine)}.</p>
             )}
@@ -259,7 +259,7 @@ export default async function DeskPage() {
                   </thead>
                   <tbody className="divide-rows">
                     {recent.map((trade) => (
-                      <tr key={trade.id} className="text-[#cdefe2]">
+                      <tr key={trade.id} className="text-fg">
                         <td className="py-1.5">{trade.tradeDate}</td>
                         <td className="text-dim">{formatTime(trade.openedAt, config.timezone)}</td>
                         <td className="text-dim">{sessions.find((s) => s.key === trade.sessionKey)?.shortName ?? '—'}</td>

@@ -1,4 +1,4 @@
-import { Card, MoneyText, Stat, StatGrid } from '@/components/ui';
+import { Card, MoneyText, SectionTitle, Stat, StatGrid } from '@/components/ui';
 import { BarChart, Gauge, LineChart, SplitBar } from '@/components/charts';
 import { BreakdownTable } from '@/components/breakdown-table';
 import { NoAccounts } from '@/components/no-accounts';
@@ -18,8 +18,11 @@ import {
   computeStats,
   dailyEquityCurve,
   dayProfitFactor,
+  ENTRY_EDGE_MINS,
+  entryTimingBreakdown,
   groupByDay,
   maxDrawdown,
+  monthBreakdown,
   processSlice,
   ruleBreakDaysByWeekday,
   streaks,
@@ -37,6 +40,20 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function one(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function statsHref(
+  current: Record<string, string | string[] | undefined>,
+  patch: Record<string, string | undefined>,
+): string {
+  const q = new URLSearchParams();
+  const keys = new Set([...Object.keys(current), ...Object.keys(patch)]);
+  for (const key of keys) {
+    const value = key in patch ? patch[key] : one(current[key]);
+    if (value) q.set(key, value);
+  }
+  const search = q.toString();
+  return search ? `/stats?${search}` : '/stats';
 }
 
 
@@ -194,6 +211,19 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
 
   const bestDayShare = stats.totalPnl > 0 && dayStats.bestDay ? (dayStats.bestDay.pnl / stats.totalPnl) * 100 : 0;
 
+  const monthRows = monthBreakdown(trades, config.beBandR);
+  const monthBars = [...monthRows].reverse().map((row) => ({ label: row.label, value: row.stats.totalPnl }));
+  const timingChoices = [
+    { key: 'all', label: 'Combined' },
+    ...sessions
+      .filter((s) => trades.some((t) => t.sessionKey === s.key))
+      .map((s) => ({ key: s.key, label: s.name })),
+  ];
+  const requestedTiming = one(params.timing) ?? 'all';
+  const timingFilter = timingChoices.some((choice) => choice.key === requestedTiming) ? requestedTiming : 'all';
+  const timingTrades = timingFilter === 'all' ? trades : trades.filter((t) => t.sessionKey === timingFilter);
+  const timingRows = entryTimingBreakdown(timingTrades, sessions, config.beBandR);
+
   const sessionRows = breakdown(
     trades,
     config.beBandR,
@@ -241,7 +271,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
   const shorts = trades.filter((t) => t.side === 'SHORT');
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <Card bodyClassName="px-4 py-3 sm:px-5">
         <form className="flex flex-wrap items-end gap-3">
           <div>
@@ -299,6 +329,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
             </label>
             <input id="to" name="to" type="date" defaultValue={to ?? ''} className="text-sm" />
           </div>
+          {timingFilter !== 'all' && <input type="hidden" name="timing" value={timingFilter} />}
           <button className="btn btn-primary" type="submit">
             Apply
           </button>
@@ -309,7 +340,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         </form>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <Card title="Trade win %">
           <Gauge pct={stats.winRate} label="Wins vs losses" sub={`${stats.wins}W · ${stats.losses}L · ${stats.breakevens}BE`} />
         </Card>
@@ -333,7 +364,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-4">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-4">
         <Card title="Most active day">
           <Stat label={mostActive?.label ?? '—'} value={mostActive ? `${mostActive.stats.trades} trades` : '—'} size="sm" />
         </Card>
@@ -365,27 +396,68 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
         <Card title="Equity curve" action={<span className="text-[11px] text-dim">Cumulative P&L</span>}>
-          <LineChart series={[{ points: curve, colour: '#22d39a', label: 'Cumulative' }]} />
+          <LineChart series={[{ points: curve, colour: 'rgb(var(--mint-400))', label: 'Cumulative' }]} />
         </Card>
         <Card title="Net daily P&L">
           <BarChart bars={days.sort((a, b) => a.date.localeCompare(b.date)).map((d) => ({ label: d.date.slice(5), value: d.pnl }))} />
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card title="Sessions" action={<span className="text-[11px] text-dim">Size and time in the trade</span>}>
+      <div id="breakdowns" className="space-y-5">
+        <SectionTitle hint="Win % leaves out breakeven">Breakdowns</SectionTitle>
+        <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+          <Card title="By month" action={<span className="text-[11px] text-dim">New York trading day</span>}>
+            <BarChart bars={monthBars} />
+            <div className="mt-4">
+              <BreakdownTable
+                rows={monthRows}
+                columns={['trades', 'winRate', 'totalR', 'avgR', 'pf', 'bar']}
+                emptyLabel="No trades in this range."
+              />
+            </div>
+            <p className="mt-2 text-[11px] text-dim">Newest month first. Bars run oldest to newest.</p>
+          </Card>
+          <Card title="Entry timing" action={<span className="text-[11px] text-dim">{ENTRY_EDGE_MINS}-minute edges</span>}>
+            {timingChoices.length > 1 && (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {timingChoices.map((choice) => (
+                  <a
+                    key={choice.key}
+                    href={statsHref(params, { timing: choice.key === 'all' ? undefined : choice.key })}
+                    className={`rounded-md px-2.5 py-1 text-xs ${timingFilter === choice.key ? 'chip-on' : 'text-dim hover:bg-ink-800 hover:text-fg'}`}
+                  >
+                    {choice.label}
+                  </a>
+                ))}
+              </div>
+            )}
+            <BreakdownTable
+              rows={timingRows}
+              columns={['trades', 'winRate', 'totalR', 'avgR', 'bar']}
+              emptyLabel="No trades in this range."
+            />
+            <p className="mt-2 text-[11px] text-dim">
+              Each entry is measured from that session&rsquo;s own open and close. Combined pools every session.
+              After the close is a known time outside the window. No time entered stays out of the clock buckets.
+            </p>
+          </Card>
+        </div>
+      </div>
+
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+        <Card title="By session" action={<span className="text-[11px] text-dim">Size and time in the trade</span>}>
           <BreakdownTable rows={sessionRows} columns={['trades', 'winRate', 'avgWin', 'avgLoss', 'hold', 'winHold', 'lossHold']} />
         </Card>
-        <Card title="Entries · slot">
+        <Card title="By trade # of the day">
           <BreakdownTable rows={slotRows} columns={['trades', 'winRate', 'avgR', 'pf']} />
           <div className="mt-4 space-y-2">
             <div className="card-title">Trigger rate</div>
             {triggers.map((t) => (
               <div key={t.slot} className="flex items-center justify-between text-sm">
                 <span className="text-dim">{t.slot}</span>
-                <span className="tabular text-[#cdefe2]">
+                <span className="tabular text-fg">
                   {fmtPct(t.rate)} <span className="text-dim">of {t.of} sessions</span>
                 </span>
               </div>
@@ -404,7 +476,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
             Day win % is green days over green and red days. A day can be marked followed and still carry a reason.
           </p>
         </Card>
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-2">
           <Card title="Rule-break reasons by cost">
             <ProcessTable rows={reasonRows} empty="No reasons logged in this range." />
             <p className="mt-2 text-[11px] text-dim">Sorted by P&amp;L, most costly first. Cost is the day&rsquo;s result, not a single trade.</p>
@@ -416,7 +488,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
             </p>
           </Card>
         </div>
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-3">
           <Card title="By mood">
             <ProcessTable rows={moodRows} empty="No mood logged." />
           </Card>
@@ -429,7 +501,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
         <Card title="Rule-break days by weekday">
           {breakWeekdays.length === 0 ? (
             <p className="text-sm text-dim">No days in this range.</p>
@@ -457,16 +529,16 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
             A rule-break day is one where Rules followed? is No.
           </p>
         </Card>
-        <Card title="Weekdays">
+        <Card title="By day of week">
           <BreakdownTable rows={weekdayRows} columns={['trades', 'winRate', 'avgR', 'bar']} />
         </Card>
-        <Card title="Hour of day (New York)">
+        <Card title="By hour" action={<span className="text-[11px] text-dim">New York clock</span>}>
           <BreakdownTable rows={hourRows} columns={['trades', 'winRate', 'avgR', 'bar']} />
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card title="Instruments">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+        <Card title="By instrument">
           <BreakdownTable rows={instrumentRows} columns={['trades', 'winRate', 'avgWin', 'avgLoss', 'bar']} />
         </Card>
         <Card title="Direction">
@@ -488,7 +560,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
         <Card title="Playbooks">
           <BreakdownTable rows={playbookRows} columns={['trades', 'winRate', 'avgR', 'pf']} emptyLabel="Attach a playbook to trades to see this." />
         </Card>
@@ -497,7 +569,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
         <Card title="Mistake tags" action={<span className="text-[11px] text-dim">{tags.length} tags configured</span>}>
           <BreakdownTable rows={mistakeRows} columns={['trades', 'winRate', 'avgR', 'bar']} emptyLabel="No mistakes tagged. Good." />
         </Card>

@@ -83,7 +83,7 @@ export default async function MoneyPage() {
             </div>
             <div className="rounded-xl border border-line bg-ink-850/60 p-3">
               <div className="card-title">Eval spend</div>
-              <div className="tabular mt-1 text-xl font-semibold text-[#ff9aa3]">{fmtMoney(-evalSpend)}</div>
+              <div className="tabular mt-1 text-xl font-semibold text-loss-text">{fmtMoney(-evalSpend)}</div>
             </div>
           </div>
         </Card>
@@ -111,7 +111,7 @@ export default async function MoneyPage() {
                 const m = money.get(a.id)!;
                 return (
                   <tr key={a.id}>
-                    <td className="py-1.5 text-[#cdefe2]">{a.name}</td>
+                    <td className="py-1.5 text-fg">{a.name}</td>
                     <td>
                       {a.type === 'PROP' ? (
                         <Badge tone={a.stage === 'FUNDED' ? 'up' : a.stage === 'BLOWN' ? 'down' : 'neutral'}>
@@ -129,7 +129,7 @@ export default async function MoneyPage() {
                     <td className="text-right text-dim">{m.payouts ? fmtMoney(m.payouts) : '—'}</td>
                     <td className="text-right text-dim">{m.deposits ? fmtMoney(m.deposits) : '—'}</td>
                     <td className="text-right text-dim">{m.withdrawals ? fmtMoney(-m.withdrawals) : '—'}</td>
-                    <td className="text-right font-medium text-[#e6fff5]">{fmtMoney(m.balance)}</td>
+                    <td className="text-right font-medium text-fg-strong">{fmtMoney(m.balance)}</td>
                     <td className="text-right">
                       <MoneyText value={m.netOnSpend} />
                     </td>
@@ -172,7 +172,7 @@ export default async function MoneyPage() {
                   <tr key={entry.id}>
                     <td className="py-1.5">{entry.date}</td>
                     <td className="text-dim">{scope.accounts.find((a) => a.id === entry.accountId)?.name}</td>
-                    <td className="text-[#cdefe2]">{kindLabel(entry.kind)}</td>
+                    <td className="text-fg">{kindLabel(entry.kind)}</td>
                     <td className="text-right">
                       <MoneyText value={kindSign(entry.kind) * entry.amount} decimals />
                     </td>
@@ -180,7 +180,7 @@ export default async function MoneyPage() {
                     <td className="text-right">
                       <form action={deleteLedgerEntry}>
                         <input type="hidden" name="id" value={entry.id} />
-                        <button className="btn btn-sm btn-ghost text-[#ff9aa3]" type="submit">
+                        <button className="btn btn-sm btn-ghost text-loss-text" type="submit">
                           Delete
                         </button>
                       </form>

@@ -15,7 +15,7 @@ export default async function EditAccountPage({ params }: { params: Promise<{ id
 
   return (
     <div className="mx-auto max-w-4xl space-y-5">
-      <h1 className="text-lg font-semibold tracking-tight text-[#eafff7]">{account.name}</h1>
+      <h1 className="text-lg font-semibold tracking-tight text-fg-strong">{account.name}</h1>
 
       <Card>
         <AccountForm account={account} sessions={sessions} today={today} />
@@ -40,7 +40,7 @@ export default async function EditAccountPage({ params }: { params: Promise<{ id
               </label>
               <input id="resetStart" name="startDate" type="date" defaultValue={today} className="text-sm" />
             </div>
-            <label className="flex items-center gap-2 pb-2 text-sm text-[#cdefe2]">
+            <label className="flex items-center gap-2 pb-2 text-sm text-fg">
               <input type="checkbox" name="markBlown" defaultChecked />
               Mark this one blown
             </label>
