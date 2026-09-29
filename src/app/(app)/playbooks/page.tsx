@@ -45,7 +45,7 @@ export default async function PlaybooksPage() {
               action={
                 <form action={deletePlaybook}>
                   <input type="hidden" name="id" value={playbook.id} />
-                  <button className="btn btn-sm btn-ghost text-[#ff9aa3]" type="submit">
+                  <button className="btn btn-sm btn-ghost text-loss-text" type="submit">
                     Delete
                   </button>
                 </form>
@@ -80,7 +80,7 @@ export default async function PlaybooksPage() {
                         const seen = kept.length + broke.length;
                         return (
                           <tr key={rule.id}>
-                            <td className="py-1.5 text-[#cdefe2]">{rule.text}</td>
+                            <td className="py-1.5 text-fg">{rule.text}</td>
                             <td className="text-right text-dim">{kept.length}</td>
                             <td className="text-right text-dim">{broke.length}</td>
                             <td className="text-right text-dim">{seen ? fmtPct((kept.length / seen) * 100) : '—'}</td>

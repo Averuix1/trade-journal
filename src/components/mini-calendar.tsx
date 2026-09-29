@@ -23,7 +23,7 @@ export function MiniCalendar({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-[#e6fff5]">
+        <span className="text-sm font-medium text-fg-strong">
           {monthName(m)} {year}
         </span>
         <Link href={`/calendar?month=${month}`} className="text-[11px] text-mint-300 hover:underline">
@@ -46,10 +46,10 @@ export function MiniCalendar({
             : !day || day.trades === 0
               ? 'bg-ink-850/60 text-dim/70'
               : day.pnl > 0
-                ? 'bg-profit/70 text-[#d8ffec]'
+                ? 'bg-profit/70 text-white'
                 : day.pnl < 0
-                  ? 'bg-loss/70 text-[#ffd8dc]'
-                  : 'bg-ink-700 text-[#cdefe2]';
+                  ? 'bg-loss/70 text-white'
+                  : 'bg-ink-700 text-fg';
           return (
             <Link
               key={key}

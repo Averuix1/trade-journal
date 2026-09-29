@@ -148,10 +148,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
       <Card bodyClassName="px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1 rounded-lg border border-line bg-ink-850 p-0.5">
-            <Link href={qs({ view: undefined })} className={`rounded-md px-3 py-1 text-xs ${view === 'month' ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}>
+            <Link href={qs({ view: undefined })} className={`rounded-md px-3 py-1 text-xs ${view === 'month' ? 'chip-on' : 'text-dim'}`}>
               Month
             </Link>
-            <Link href={qs({ view: 'week', week: startOfWeek(today) })} className={`rounded-md px-3 py-1 text-xs ${view === 'week' ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}>
+            <Link href={qs({ view: 'week', week: startOfWeek(today) })} className={`rounded-md px-3 py-1 text-xs ${view === 'week' ? 'chip-on' : 'text-dim'}`}>
               Week
             </Link>
           </div>
@@ -165,11 +165,11 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
               ‹
             </Link>
             <div className="text-center">
-              <div className="flex items-center gap-2 text-lg font-semibold tracking-tight text-[#eafff7]">
+              <div className="flex items-center gap-2 text-lg font-semibold tracking-tight text-fg-strong">
                 {view === 'week' ? `Week of ${weekAnchor}` : `${monthName(m)} ${year}`}
                 <span
                   className={`tabular rounded-full px-2.5 py-0.5 text-sm font-semibold ${
-                    monthTotal > 0 ? 'bg-mint-500/20 text-mint-200' : monthTotal < 0 ? 'bg-[#3a1119] text-[#ff9aa3]' : 'bg-ink-800 text-dim'
+                    monthTotal > 0 ? 'chip-on' : monthTotal < 0 ? 'bg-loss-soft text-loss-text' : 'bg-ink-800 text-dim'
                   }`}
                 >
                   {fmtSigned(monthTotal)}
@@ -199,7 +199,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                 <Link
                   key={option.key}
                   href={qs({ system: option.key === 'all' ? undefined : option.key })}
-                  className={`rounded-md px-2.5 py-1 text-xs ${systemFilter === option.key ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}
+                  className={`rounded-md px-2.5 py-1 text-xs ${systemFilter === option.key ? 'chip-on' : 'text-dim'}`}
                 >
                   {option.label}
                 </Link>
@@ -233,7 +233,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
               {d}
             </div>
           ))}
-          <div className="pb-1 text-center text-[10px] uppercase tracking-[0.16em] text-[#9fd3c2]">
+          <div className="pb-1 text-center text-[10px] uppercase tracking-[0.16em] text-mint-200">
             Week
             <div className="text-[9px] normal-case tracking-normal text-dim">total</div>
           </div>
@@ -257,10 +257,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                     : !summary
                       ? 'bg-ink-900/60 text-dim/60'
                       : summary.pnl > 0
-                        ? 'bg-profit text-[#e6fff3]'
+                        ? 'bg-profit text-white'
                         : summary.pnl < 0
-                          ? 'bg-loss text-[#ffe7ea]'
-                          : 'bg-ink-700 text-[#cdefe2]';
+                          ? 'bg-loss text-white'
+                          : 'bg-ink-700 text-fg';
                   return (
                     // Same-page client navigations are cancelled while the route skeleton is showing.
                     <a
@@ -272,7 +272,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                     >
                       <span className="text-[10px] font-medium opacity-70">{Number(key.slice(8))}</span>
                       {summary && !isHidden && (
-                        <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: summary.breaks ? '#ff6b7a' : '#4fe8b1' }} />
+                        <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: summary.breaks ? 'rgb(var(--loss-text))' : 'rgb(var(--mint-300))' }} />
                       )}
                       <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
                         {isHidden ? (
@@ -303,7 +303,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
                   {weekDays.length ? (
                     <>
                       <span
-                        className={`tabular mt-1 flex flex-col leading-tight ${weekTotal > 0 ? 'text-[#7df3bd]' : weekTotal < 0 ? 'text-[#ff8c96]' : 'text-dim'}`}
+                        className={`tabular mt-1 flex flex-col leading-tight ${weekTotal > 0 ? 'text-profit-text' : weekTotal < 0 ? 'text-loss-text' : 'text-dim'}`}
                       >
                         <span className="whitespace-nowrap text-[11px] font-semibold sm:text-sm">
                           <span className="sm:hidden">{fmtSignedCompact(weekTotal)}</span>

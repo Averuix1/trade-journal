@@ -60,7 +60,7 @@ export function LedgerForm({ accounts, defaultAccountId, today }: { accounts: Ac
       <button className="btn btn-primary" type="submit" disabled={pending}>
         {pending ? 'Adding…' : 'Add entry'}
       </button>
-      {state.error && <p className="w-full text-sm text-[#ff9aa3]">{state.error}</p>}
+      {state.error && <p className="w-full text-sm text-loss-text">{state.error}</p>}
       {state.message && <p className="w-full text-sm text-mint-300">{state.message}</p>}
     </form>
   );

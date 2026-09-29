@@ -19,7 +19,7 @@ export function PropRulesCard({ status, name }: { status: PropStatus; name: stri
       <div className="mb-3">
         <div className="mb-1.5 flex items-baseline justify-between">
           <span className="text-xs text-dim">Profit target</span>
-          <span className="tabular text-sm font-medium text-[#e6fff5]">
+          <span className="tabular text-sm font-medium text-fg-strong">
             {status.profitTarget == null
               ? 'Not set'
               : status.targetLeft === 0

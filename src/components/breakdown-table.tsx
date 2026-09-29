@@ -47,7 +47,7 @@ export function BreakdownTable({
         <tbody className="divide-rows">
           {rows.map((row) => (
             <tr key={row.key}>
-              <td className="py-1.5 text-[#cdefe2]">{row.label}</td>
+              <td className="py-1.5 text-fg">{row.label}</td>
               <td className="text-right">
                 <MoneyText value={row.stats.totalPnl} />
               </td>

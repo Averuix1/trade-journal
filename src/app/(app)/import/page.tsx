@@ -26,21 +26,21 @@ export default async function ImportPage() {
       <Card title="Where the file comes from">
         <div className="grid gap-4 text-sm text-dim sm:grid-cols-2">
           <div>
-            <div className="mb-1 font-medium text-[#cdefe2]">TopstepX</div>
+            <div className="mb-1 font-medium text-fg">TopstepX</div>
             <p>
               Open TopstepX, go to the trades/performance view, set the date range and export to CSV. The columns
               (ContractName, EnteredAt, ExitedAt, EntryPrice, ExitPrice, Fees, PnL, Size) are detected automatically.
             </p>
           </div>
           <div>
-            <div className="mb-1 font-medium text-[#cdefe2]">Tradovate</div>
+            <div className="mb-1 font-medium text-fg">Tradovate</div>
             <p>
               In Tradovate go to Reports → Performance → Trades and download the CSV. Its bought/sold timestamps and
               buy/sell prices are used to work out whether each trade was long or short.
             </p>
           </div>
           <div>
-            <div className="mb-1 font-medium text-[#cdefe2]">Google Sheets journal</div>
+            <div className="mb-1 font-medium text-fg">Google Sheets journal</div>
             <p>
               Export the trade log (one row per filled slot). Date, session, slot, instrument, direction, risk and
               result are read. The sheet&rsquo;s outcome and R columns are ignored and R is recalculated. Day notes,
@@ -80,7 +80,7 @@ export default async function ImportPage() {
                     <td className="text-right">
                       <form action={undoImport}>
                         <input type="hidden" name="id" value={batch.id} />
-                        <button className="btn btn-sm btn-ghost text-[#ff9aa3]" type="submit">
+                        <button className="btn btn-sm btn-ghost text-loss-text" type="submit">
                           Undo import
                         </button>
                       </form>

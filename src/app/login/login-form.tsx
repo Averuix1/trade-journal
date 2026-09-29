@@ -28,7 +28,7 @@ export default function LoginForm() {
         />
       </div>
       {state.error && (
-        <p className="rounded-lg border border-[#7a2331] bg-[#3a1119] px-3 py-2 text-sm text-[#ff9aa3]">{state.error}</p>
+        <p className="rounded-lg border border-loss bg-loss-soft px-3 py-2 text-sm text-loss-text">{state.error}</p>
       )}
       <button className="btn btn-primary w-full" type="submit" disabled={pending}>
         {pending ? 'Checking…' : 'Sign in'}

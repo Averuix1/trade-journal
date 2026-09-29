@@ -157,7 +157,7 @@ export function TradeForm({
               key={value}
               type="button"
               aria-pressed={mode === value}
-              className={`rounded-md px-3 py-1.5 text-xs ${mode === value ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}
+              className={`rounded-md px-3 py-1.5 text-xs ${mode === value ? 'chip-on' : 'text-dim'}`}
               onClick={() => chooseMode(value)}
             >
               {value === 'quick' ? 'Quick' : 'Detailed'}
@@ -201,7 +201,7 @@ export function TradeForm({
               <label
                 key={value}
                 className={`flex-1 cursor-pointer rounded-md px-2 py-1.5 text-center text-xs ${
-                  side === value ? 'bg-mint-500/20 text-mint-200' : 'text-dim'
+                  side === value ? 'chip-on' : 'text-dim'
                 }`}
               >
                 <input type="radio" name="side" value={value} checked={side === value} onChange={() => setSide(value)} className="sr-only" />
@@ -232,7 +232,7 @@ export function TradeForm({
                 Session
               </label>
               {tradeTime ? (
-                <div className="field flex items-center text-sm text-[#cdefe2]">{timeSession ? timeSession.name : 'Outside your sessions'}</div>
+                <div className="field flex items-center text-sm text-fg">{timeSession ? timeSession.name : 'Outside your sessions'}</div>
               ) : (
                 <select id="tradeSession" name="sessionKey" value={sessionKey} onChange={(e) => setSessionKey(e.target.value)} className="field">
                   {sessionChoices.map((session) => (
@@ -311,7 +311,7 @@ export function TradeForm({
                   key={value}
                   type="button"
                   aria-pressed={outcome === value}
-                  className={`rounded-md px-3 py-1.5 text-xs ${outcome === value ? 'bg-mint-500/20 text-mint-200' : 'text-dim'}`}
+                  className={`rounded-md px-3 py-1.5 text-xs ${outcome === value ? 'chip-on' : 'text-dim'}`}
                   onClick={() => setOutcome(value)}
                 >
                   {label}
@@ -339,7 +339,7 @@ export function TradeForm({
           <div className="grid gap-4 rounded-xl border border-line bg-ink-850/50 p-4 sm:grid-cols-3">
             <div>
               <span className="label">Planned RR</span>
-              <div id="planned-rr" className="tabular text-lg font-semibold text-[#eafff7]">
+              <div id="planned-rr" className="tabular text-lg font-semibold text-fg-strong">
                 {planned == null ? '—' : fmtR(planned)}
               </div>
               <p className="mt-1 text-[11px] text-dim">Take profit divided by risk.</p>
@@ -363,7 +363,7 @@ export function TradeForm({
             <div>
               <span className="label">Result</span>
               <div id="live-result" className="rounded-lg border border-line bg-ink-900 px-3 py-2">
-                <div className={`tabular text-lg font-semibold ${(quickResult ?? 0) >= 0 ? 'text-[#7df3bd]' : 'text-[#ff8c96]'}`}>
+                <div className={`tabular text-lg font-semibold ${(quickResult ?? 0) >= 0 ? 'text-profit-text' : 'text-loss-text'}`}>
                   {quickResult == null ? '—' : fmtSigned(quickResult, true)}
                 </div>
                 <div className="text-[11px] text-dim">{achieved == null ? 'Add a risk amount for R' : fmtR(achieved)}</div>
@@ -501,7 +501,7 @@ export function TradeForm({
             <div>
               <span className="label">Result</span>
               <div id="live-result" className="rounded-lg border border-line bg-ink-900 px-3 py-2">
-                <div className={`tabular text-lg font-semibold ${effectivePnl >= 0 ? 'text-[#7df3bd]' : 'text-[#ff8c96]'}`}>
+                <div className={`tabular text-lg font-semibold ${effectivePnl >= 0 ? 'text-profit-text' : 'text-loss-text'}`}>
                   {fmtMoney(effectivePnl, true)}
                 </div>
                 <div className="text-[11px] text-dim">{computedR == null ? 'Add a stop or a risk amount for R' : fmtR(computedR)}</div>
@@ -537,7 +537,7 @@ export function TradeForm({
               const broken = trade?.brokenRuleIds?.includes(rule.id);
               return (
                 <div key={rule.id} className="flex items-center justify-between gap-3 rounded-lg border border-line-soft bg-ink-850/50 px-3 py-2 text-sm">
-                  <span className="text-[#cdefe2]">{rule.text}</span>
+                  <span className="text-fg">{rule.text}</span>
                   <span className="flex shrink-0 gap-3 text-[11px] text-dim">
                     <label className="flex items-center gap-1">
                       <input type="checkbox" name="followedRuleIds" value={rule.id} defaultChecked={followed} /> kept
@@ -559,7 +559,7 @@ export function TradeForm({
           {mistakeTags.map((tag) => (
             <label
               key={tag.id}
-              className="cursor-pointer rounded-full border border-line bg-ink-850 px-3 py-1 text-xs text-dim transition has-[:checked]:border-[#7a2331] has-[:checked]:bg-[#3a1119] has-[:checked]:text-[#ff9aa3]"
+              className="cursor-pointer rounded-full border border-line bg-ink-850 px-3 py-1 text-xs text-dim transition has-[:checked]:border-loss has-[:checked]:bg-loss-soft has-[:checked]:text-loss-text"
             >
               <input type="checkbox" name="mistakeTags" value={tag.name} defaultChecked={trade?.mistakeTags?.includes(tag.name)} className="sr-only" />
               {tag.name}
@@ -581,14 +581,14 @@ export function TradeForm({
             Chart screenshots
           </label>
           <input id="screenshots" name="screenshots" type="file" accept="image/*" multiple className="field" />
-          <label className="mt-3 flex items-center gap-2 text-sm text-[#cdefe2]">
+          <label className="mt-3 flex items-center gap-2 text-sm text-fg">
             <input type="checkbox" name="hidden" defaultChecked={trade?.hidden ?? false} />
             Hide this trade from results
           </label>
         </div>
       </div>
 
-      {state.error && <p className="rounded-lg border border-[#7a2331] bg-[#3a1119] px-3 py-2 text-sm text-[#ff9aa3]">{state.error}</p>}
+      {state.error && <p className="rounded-lg border border-loss bg-loss-soft px-3 py-2 text-sm text-loss-text">{state.error}</p>}
       {state.message && <p className="rounded-lg border border-mint-500/40 bg-mint-500/10 px-3 py-2 text-sm text-mint-200">{state.message}</p>}
 
       <div className="flex items-center gap-2">

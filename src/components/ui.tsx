@@ -42,7 +42,7 @@ export function Stat({
   size?: 'sm' | 'md' | 'lg';
 }) {
   const toneClass =
-    tone === 'up' ? 'text-[#7df3bd]' : tone === 'down' ? 'text-[#ff8c96]' : 'text-[#eafff7]';
+    tone === 'up' ? 'text-profit-text' : tone === 'down' ? 'text-loss-text' : 'text-fg-strong';
   const sizeClass = size === 'lg' ? 'text-3xl' : size === 'sm' ? 'text-lg' : 'text-2xl';
   return (
     <div>
@@ -86,7 +86,7 @@ export function Empty({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-line px-6 py-10 text-center">
-      <div className="text-base font-medium text-[#d8ece6]">{title}</div>
+      <div className="text-base font-medium text-fg">{title}</div>
       <p className="max-w-md text-sm text-dim">{body}</p>
       {action && (
         <Link className="btn btn-primary mt-1" href={action.href}>
@@ -106,9 +106,9 @@ export function Badge({
 }) {
   const map = {
     neutral: 'border-line bg-ink-850 text-dim',
-    up: 'border-mint-500/40 bg-mint-500/15 text-mint-200',
-    down: 'border-[#7a2331] bg-[#3a1119] text-[#ff9aa3]',
-    warn: 'border-[#7a5a23] bg-[#3a2d11] text-[#ffd79a]',
+    up: 'border-mint-500/40 chip-on',
+    down: 'border-loss bg-loss-soft text-loss-text',
+    warn: 'border-warn-line bg-warn-soft text-warn',
     on: 'border-mint-400/60 bg-mint-400/20 text-mint-100',
   };
   return (
@@ -123,7 +123,7 @@ export function ProgressBar({ pct, tone = 'mint' }: { pct: number; tone?: 'mint'
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-ink-800">
       <div
-        className={`h-full rounded-full ${tone === 'mint' ? 'bg-mint-400' : 'bg-[#e0a24e]'}`}
+        className={`h-full rounded-full ${tone === 'mint' ? 'bg-mint-400' : 'bg-warn'}`}
         style={{ width: `${clamped}%` }}
       />
     </div>
@@ -136,7 +136,7 @@ export function KeyValue({ label, value, tone }: { label: ReactNode; value: Reac
       <span className="text-xs text-dim">{label}</span>
       <span
         className={`tabular text-sm font-medium ${
-          tone === 'up' ? 'text-[#7df3bd]' : tone === 'down' ? 'text-[#ff8c96]' : 'text-[#e6fff5]'
+          tone === 'up' ? 'text-profit-text' : tone === 'down' ? 'text-loss-text' : 'text-fg-strong'
         }`}
       >
         {value}
@@ -148,7 +148,7 @@ export function KeyValue({ label, value, tone }: { label: ReactNode; value: Reac
 export function SectionTitle({ children, hint }: { children: ReactNode; hint?: ReactNode }) {
   return (
     <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[#9fd3c2]">{children}</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-mint-200">{children}</h2>
       {hint && <span className="text-xs text-dim">{hint}</span>}
     </div>
   );
@@ -156,7 +156,7 @@ export function SectionTitle({ children, hint }: { children: ReactNode; hint?: R
 
 export function MoneyText({ value, decimals = false }: { value: number; decimals?: boolean }) {
   return (
-    <span className={`tabular ${value > 0 ? 'text-[#7df3bd]' : value < 0 ? 'text-[#ff8c96]' : 'text-dim'}`}>
+    <span className={`tabular ${value > 0 ? 'text-profit-text' : value < 0 ? 'text-loss-text' : 'text-dim'}`}>
       {fmtSigned(value, decimals)}
     </span>
   );

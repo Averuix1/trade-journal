@@ -28,8 +28,8 @@ function isActive(pathname: string, href: string) {
 const tabClass = (active: boolean) =>
   `whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition ${
     active
-      ? 'bg-mint-500/15 text-mint-200 ring-1 ring-inset ring-mint-500/40'
-      : 'text-dim hover:bg-ink-800 hover:text-[#cdefe2]'
+      ? 'chip-on'
+      : 'text-dim hover:bg-ink-800 hover:text-fg'
   }`;
 
 export function Nav() {
@@ -55,7 +55,7 @@ export function Nav() {
               prefetch="auto"
               onClick={close}
               className={`block rounded-lg px-3 py-2 text-sm ${
-                isActive(pathname, item.href) ? 'bg-mint-500/15 text-mint-200' : 'text-[#cdefe2] hover:bg-ink-800'
+                isActive(pathname, item.href) ? 'chip-on' : 'text-fg hover:bg-ink-800'
               }`}
             >
               {item.label}

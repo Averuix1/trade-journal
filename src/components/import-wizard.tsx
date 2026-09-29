@@ -53,7 +53,7 @@ export function ImportWizard({
             {previewPending ? 'Reading…' : 'Read file'}
           </button>
         </div>
-        {previewState.error && <p className="text-sm text-[#ff9aa3]">{previewState.error}</p>}
+        {previewState.error && <p className="text-sm text-loss-text">{previewState.error}</p>}
         <p className="text-[11px] text-dim">
           Nothing is saved until you press Import. Rows that already exist on the account are skipped automatically.
         </p>
@@ -63,7 +63,7 @@ export function ImportWizard({
         <div className="space-y-4 rounded-xl border border-line bg-ink-850/40 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-sm font-medium text-[#e6fff5]">
+              <div className="text-sm font-medium text-fg-strong">
                 {preview.kind === 'sheet' ? 'Google Sheets journal' : preview.fileName} · looks like {preview.source}
               </div>
               <div className="text-[11px] text-dim">
@@ -74,7 +74,7 @@ export function ImportWizard({
           </div>
 
           {preview.kind === 'sheet' && preview.warnings.length > 0 && (
-            <div className="rounded-lg border border-[#7a5a23] bg-[#3a2d11]/60 px-3 py-2 text-xs text-[#ffd79a]">
+            <div className="rounded-lg border border-warn-line bg-warn-soft/70 px-3 py-2 text-xs text-warn">
               {preview.warnings.map((warning) => (
                 <div key={warning}>{warning}</div>
               ))}
@@ -110,7 +110,7 @@ export function ImportWizard({
           )}
 
           {preview.errors.length > 0 && (
-            <div className="rounded-lg border border-[#7a5a23] bg-[#3a2d11]/60 px-3 py-2 text-xs text-[#ffd79a]">
+            <div className="rounded-lg border border-warn-line bg-warn-soft/70 px-3 py-2 text-xs text-warn">
               {preview.errors.map((e) => (
                 <div key={e.row}>
                   Row {e.row}: {e.message}
@@ -156,7 +156,7 @@ export function ImportWizard({
             ))}
 
             {preview.kind === 'sheet' && placeholderCount > 0 && (
-              <p className="rounded-lg border border-[#7a5a23] bg-[#3a2d11]/60 px-3 py-2 text-xs text-[#ffd79a]">
+              <p className="rounded-lg border border-warn-line bg-warn-soft/70 px-3 py-2 text-xs text-warn">
                 {placeholderCount} rows list $500 risk. In this journal $500 is a placeholder, not a measured stop. Keep the
                 sheet amounts, replace every row, or set risk on a row. R is result divided by the risk you keep.
               </p>
@@ -309,7 +309,7 @@ export function ImportWizard({
                           </td>
                           <td className="text-right">{fmtSigned(row.pnl)}</td>
                           <td className="text-right text-dim">{fmtR(shownR)}</td>
-                          <td className={row.error ? 'text-[#ff9aa3]' : 'text-dim'}>{row.error ?? row.setup ?? '—'}</td>
+                          <td className={row.error ? 'text-loss-text' : 'text-dim'}>{row.error ?? row.setup ?? '—'}</td>
                           {accountMode === 'row' && (
                             <td>
                               <select name={`rowAccount_${row.index}`} defaultValue={defaultAccountId} className="text-xs" aria-label={`Account for ${row.date}`}>
@@ -345,7 +345,7 @@ export function ImportWizard({
               <button className="btn btn-primary" type="submit" disabled={runPending || preview.ready === 0}>
                 {runPending ? 'Importing…' : `Import ${preview.ready} trades`}
               </button>
-              {runState.error && <p className="text-sm text-[#ff9aa3]">{runState.error}</p>}
+              {runState.error && <p className="text-sm text-loss-text">{runState.error}</p>}
               {runState.message && <p className="text-sm text-mint-300">{runState.message}</p>}
             </div>
           </form>

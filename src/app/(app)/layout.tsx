@@ -41,7 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-line bg-ink-950/90 backdrop-blur">
+      <header className="app-header sticky top-0 z-30 border-b border-line bg-ink-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
           <Link href="/" className="mr-1 text-sm font-black tracking-[0.2em] text-mint-300">
             TJ
@@ -57,7 +57,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           )}
           <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-dim">
             {hiddenDays > 0 && (
-              <Link href="/calendar" className="text-[#ffd79a] hover:underline">
+              <Link href="/calendar" className="text-warn hover:underline">
                 hiding {hiddenDays} day{hiddenDays === 1 ? '' : 's'}
               </Link>
             )}

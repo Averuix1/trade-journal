@@ -66,7 +66,7 @@ export default async function SystemPage() {
   return (
     <div className="space-y-5">
       <Card>
-        <h1 className="text-2xl font-semibold tracking-tight text-[#eafff7]">{headline}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-fg-strong">{headline}</h1>
         <p className="mt-1 text-sm text-dim">
           T1–T{scope.account?.maxTradesPerSession ?? 3} inside the session entry window is in. Dump, late and tagged
           mistakes are out.
@@ -77,21 +77,21 @@ export default async function SystemPage() {
             <div className="tabular mt-1 text-2xl font-semibold text-mint-200">{fmtMoney(cleanBalance)}</div>
             <div className="mt-1 text-[11px] text-dim">In-system trades only</div>
           </div>
-          <div className="rounded-xl border border-[#7a2331]/60 bg-[#3a1119]/40 p-4">
+          <div className="rounded-xl border border-loss/70 bg-loss-soft/50 p-4">
             <div className="card-title">Leak</div>
-            <div className="tabular mt-1 text-2xl font-semibold text-[#ff9aa3]">{fmtSigned(leak)}</div>
+            <div className="tabular mt-1 text-2xl font-semibold text-loss-text">{fmtSigned(leak)}</div>
             <div className="mt-1 text-[11px] text-dim">{outside.length} break(s)</div>
           </div>
           <div className="rounded-xl border border-line bg-ink-850 p-4">
             <div className="card-title">Live account</div>
-            <div className="tabular mt-1 text-2xl font-semibold text-[#eafff7]">{fmtMoney(liveBalance)}</div>
+            <div className="tabular mt-1 text-2xl font-semibold text-fg-strong">{fmtMoney(liveBalance)}</div>
             <div className="mt-1 text-[11px] text-dim">What you actually kept</div>
           </div>
         </div>
 
         <div className="mt-5">
           <div className="mb-1.5 flex items-baseline justify-between text-sm">
-            <span className="text-[#cdefe2]">
+            <span className="text-fg">
               {followed} of {total} trades followed the plan
             </span>
             <span className="tabular text-dim">{fmtPct(followRate)}</span>
@@ -126,8 +126,8 @@ export default async function SystemPage() {
       <Card title="Clean vs live" action={<span className="text-[11px] text-dim">Green if you had stopped. Grey is the account with the leak in.</span>}>
         <LineChart
           series={[
-            { points: cleanCurve, colour: '#22d39a', label: 'If you stopped' },
-            { points: liveCurve, colour: '#8fa8a1', label: 'Live account', dashed: true },
+            { points: cleanCurve, colour: 'rgb(var(--mint-400))', label: 'If you stopped' },
+            { points: liveCurve, colour: 'rgb(var(--dim))', label: 'Live account', dashed: true },
           ]}
           showZero={false}
         />
@@ -144,7 +144,7 @@ export default async function SystemPage() {
                 .map(([reason, entry]) => (
                   <div key={reason} className="py-2">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="text-sm text-[#cdefe2]">{BREAK_LABELS[reason] ?? reason}</span>
+                      <span className="text-sm text-fg">{BREAK_LABELS[reason] ?? reason}</span>
                       <span className="tabular text-sm">
                         <MoneyText value={entry.pnl} /> <span className="text-dim">· {entry.count}</span>
                       </span>

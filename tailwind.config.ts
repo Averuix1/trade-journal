@@ -1,43 +1,56 @@
 import type { Config } from 'tailwindcss';
 
+/** Colours resolve through the CSS variables in src/app/globals.css. */
+const channel = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         ink: {
-          950: '#04100d',
-          900: '#071915',
-          850: '#09201b',
-          800: '#0c2620',
-          700: '#113129',
-          600: '#164034',
-          500: '#1d5244',
+          950: channel('ink-950'),
+          900: channel('ink-900'),
+          850: channel('ink-850'),
+          800: channel('ink-800'),
+          700: channel('ink-700'),
+          600: channel('ink-600'),
+          500: channel('ink-500'),
         },
         line: {
-          DEFAULT: '#153a31',
-          soft: '#102b25',
-          bright: '#1f5c4c',
+          DEFAULT: channel('line'),
+          soft: channel('line-soft'),
+          bright: channel('line-bright'),
         },
         mint: {
-          100: '#c3ffe6',
-          200: '#8bf6cd',
-          300: '#4fe8b1',
-          400: '#22d39a',
-          500: '#12b47f',
-          600: '#0c8f65',
+          100: channel('mint-100'),
+          200: channel('mint-200'),
+          300: channel('mint-300'),
+          400: channel('mint-400'),
+          500: channel('mint-500'),
+          600: channel('mint-600'),
         },
         profit: {
-          DEFAULT: '#1c7f57',
-          soft: '#14603f',
-          text: '#7df3bd',
+          DEFAULT: channel('profit'),
+          soft: channel('profit-soft'),
+          text: channel('profit-text'),
         },
         loss: {
-          DEFAULT: '#7a2331',
-          soft: '#5d1a25',
-          text: '#ff8c96',
+          DEFAULT: channel('loss'),
+          soft: channel('loss-soft'),
+          text: channel('loss-text'),
         },
-        dim: '#6f918a',
+        warn: {
+          DEFAULT: channel('warn'),
+          soft: channel('warn-soft'),
+          line: channel('warn-line'),
+        },
+        fg: {
+          DEFAULT: channel('fg'),
+          strong: channel('fg-strong'),
+        },
+        dim: channel('dim'),
+        'on-accent': channel('on-accent'),
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],

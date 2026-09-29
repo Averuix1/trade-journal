@@ -16,7 +16,7 @@ export function DayScreenshotForm({ accountId, date }: { accountId: number; date
       <button className="btn btn-sm" type="submit" disabled={pending}>
         {pending ? 'Uploading…' : 'Add shot'}
       </button>
-      {state.error && <span className="text-xs text-[#ff9aa3]">{state.error}</span>}
+      {state.error && <span className="text-xs text-loss-text">{state.error}</span>}
       {state.message && <span className="text-xs text-mint-300">{state.message}</span>}
     </form>
   );

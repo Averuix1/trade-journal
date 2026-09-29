@@ -19,7 +19,7 @@ export function RestoreForm() {
       <button className="btn" type="submit" disabled={pending}>
         {pending ? 'Restoring…' : 'Restore backup'}
       </button>
-      {state.error && <p className="w-full text-sm text-[#ff9aa3]">{state.error}</p>}
+      {state.error && <p className="w-full text-sm text-loss-text">{state.error}</p>}
       {state.message && <p className="w-full text-sm text-mint-300">{state.message}</p>}
       <p className="w-full text-[11px] text-dim">
         Restoring adds the accounts from the file alongside your current ones, each suffixed &ldquo;(restored)&rdquo;.

@@ -46,8 +46,8 @@ export function pnlTone(value: number, band = 0): 'up' | 'down' | 'flat' {
 }
 
 export function pnlClass(value: number): string {
-  if (value > 0) return 'text-[#7df3bd]';
-  if (value < 0) return 'text-[#ff8c96]';
+  if (value > 0) return 'text-profit-text';
+  if (value < 0) return 'text-loss-text';
   return 'text-dim';
 }
 

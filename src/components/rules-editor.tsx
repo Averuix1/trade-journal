@@ -52,7 +52,7 @@ export function RulesEditor({ account, sessions }: { account: Account; sessions:
         <div className="space-y-2">
           {sessions.map((session) => (
             <div key={session.key} className="flex flex-wrap items-center gap-3 rounded-lg border border-line-soft bg-ink-850/50 px-3 py-2">
-              <label className="flex min-w-[10rem] flex-1 items-center gap-2 text-sm text-[#cdefe2]">
+              <label className="flex min-w-[10rem] flex-1 items-center gap-2 text-sm text-fg">
                 <input type="checkbox" name="sessions" value={session.key} defaultChecked={active.includes(session.key)} />
                 {session.name}
                 <span className="text-[11px] text-dim">
@@ -76,7 +76,7 @@ export function RulesEditor({ account, sessions }: { account: Account; sessions:
         </div>
       </div>
 
-      {state.error && <p className="text-sm text-[#ff9aa3]">{state.error}</p>}
+      {state.error && <p className="text-sm text-loss-text">{state.error}</p>}
       {state.message && <p className="text-sm text-mint-300">{state.message}</p>}
       <button type="submit" className="btn btn-primary" disabled={pending}>
         {pending ? 'Saving…' : 'Save rules'}

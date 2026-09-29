@@ -367,7 +367,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="Equity curve" action={<span className="text-[11px] text-dim">Cumulative P&L</span>}>
-          <LineChart series={[{ points: curve, colour: '#22d39a', label: 'Cumulative' }]} />
+          <LineChart series={[{ points: curve, colour: 'rgb(var(--mint-400))', label: 'Cumulative' }]} />
         </Card>
         <Card title="Net daily P&L">
           <BarChart bars={days.sort((a, b) => a.date.localeCompare(b.date)).map((d) => ({ label: d.date.slice(5), value: d.pnl }))} />
@@ -385,7 +385,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Search
             {triggers.map((t) => (
               <div key={t.slot} className="flex items-center justify-between text-sm">
                 <span className="text-dim">{t.slot}</span>
-                <span className="tabular text-[#cdefe2]">
+                <span className="tabular text-fg">
                   {fmtPct(t.rate)} <span className="text-dim">of {t.of} sessions</span>
                 </span>
               </div>
