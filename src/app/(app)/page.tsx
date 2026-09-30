@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MatrixField } from '@/components/matrix-field';
 import { Badge, Card, KeyValue, MoneyText, ProgressBar, Stat, StatGrid } from '@/components/ui';
 import { LineChart } from '@/components/charts';
 import { MiniCalendar } from '@/components/mini-calendar';
@@ -19,7 +20,7 @@ import { fmtMoney, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
 import { formatDayLong, formatTime, minutesToClock, startOfWeek, todayKey } from '@/lib/time';
 import { BREAK_LABELS } from '@/lib/defaults';
 
-export const metadata = { title: 'Desk — Trade Journal' };
+export const metadata = { title: 'Desk — Super-Journal' };
 
 export default async function DeskPage() {
   const scope = await getScope();
@@ -47,12 +48,13 @@ export default async function DeskPage() {
   const weekStart = startOfWeek(today);
   const thisWeekPnl = dayList.filter((d) => d.date >= weekStart).reduce((sum, d) => sum + d.pnl, 0);
 
-  const balance = scope.account
-    ? (money.get(scope.account.id)?.balance ?? 0)
-    : [...money.values()].reduce((sum, m) => sum + m.balance, 0);
-  const startBalance = scope.account
-    ? (scope.account.type === 'PROP' ? (scope.account.accountSize ?? 0) : scope.account.startingBalance)
-    : scope.accounts.reduce((sum, a) => sum + (a.type === 'PROP' ? (a.accountSize ?? 0) : a.startingBalance), 0);
+  const quickLog = Boolean(scope.account?.isQuickLog);
+  const balanceAccounts = scope.account ? [scope.account] : scope.accounts;
+  const balance = balanceAccounts.reduce((sum, account) => sum + (money.get(account.id)?.balance ?? 0), 0);
+  const startBalance = balanceAccounts.reduce(
+    (sum, account) => sum + (account.type === 'PROP' ? (account.accountSize ?? 0) : account.startingBalance),
+    0,
+  );
   const change = balance - startBalance;
   const roi = startBalance > 0 ? (change / startBalance) * 100 : 0;
 
@@ -85,7 +87,9 @@ export default async function DeskPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <>
+    <MatrixField />
+    <div className="relative z-10 space-y-5">
       <Card>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
@@ -93,18 +97,32 @@ export default async function DeskPage() {
               <h1 className="text-lg font-semibold tracking-tight text-fg-strong">
                 {scope.account?.name ?? 'All accounts'}
               </h1>
+              {quickLog && <Badge>Quick log</Badge>}
               {scope.account?.type === 'PROP' && (
                 <Badge tone={scope.account.stage === 'FUNDED' ? 'up' : scope.account.stage === 'BLOWN' ? 'down' : 'neutral'}>
                   {scope.account.firm ?? 'Prop'} · {scope.account.stage ?? 'EVAL'}
                 </Badge>
               )}
-              {scope.account?.type === 'PERSONAL' && <Badge>Personal</Badge>}
+              {scope.account?.type === 'PERSONAL' && !quickLog && <Badge>Personal</Badge>}
             </div>
-            <div className="tabular mt-1 text-4xl font-semibold tracking-tight text-fg-strong">{fmtMoney(balance)}</div>
-            <div className="mt-1 text-sm text-dim">
-              <MoneyText value={change} /> from {fmtMoney(startBalance)} · ROI {fmtPct(roi)}
-              {prop && ` · payouts ${fmtMoney(payouts)}`}
-            </div>
+            {quickLog ? (
+              <>
+                <div className="tabular mt-1 text-4xl font-semibold tracking-tight text-fg-strong">
+                  <MoneyText value={stats.totalPnl} />
+                </div>
+                <div className="mt-1 text-sm text-dim">
+                  Trading results only. Balance, drawdown and prop rules are not applicable for Quick log.
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="tabular mt-1 text-4xl font-semibold tracking-tight text-fg-strong">{fmtMoney(balance)}</div>
+                <div className="mt-1 text-sm text-dim">
+                  <MoneyText value={change} /> from {fmtMoney(startBalance)} · ROI {fmtPct(roi)}
+                  {prop && ` · payouts ${fmtMoney(payouts)}`}
+                </div>
+              </>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
             <Stat label="Trades" value={stats.trades} size="sm" />
@@ -231,9 +249,16 @@ export default async function DeskPage() {
             </Card>
           )}
 
-          <Card title="Equity" action={<span className="text-[11px] text-dim">Daily, from account start</span>}>
-            <LineChart series={[{ points: equity, colour: 'rgb(var(--mint-400))', label: 'Balance' }]} baseline={prop?.drawdownLine ?? undefined} showZero={false} />
-            {prop?.drawdownLine != null && (
+          <Card
+            title={quickLog ? 'Cumulative P&L' : 'Equity'}
+            action={<span className="text-[11px] text-dim">{quickLog ? 'Daily results' : 'Daily, from account start'}</span>}
+          >
+            <LineChart
+              series={[{ points: quickLog ? dailyEquityCurve(dayList, 0) : equity, colour: 'rgb(var(--mint-400))', label: quickLog ? 'P&L' : 'Balance' }]}
+              baseline={quickLog ? undefined : (prop?.drawdownLine ?? undefined)}
+              showZero={false}
+            />
+            {!quickLog && prop?.drawdownLine != null && (
               <p className="mt-2 text-[11px] text-dim">Red line is your drawdown cut-off at {fmtMoney(prop.drawdownLine)}.</p>
             )}
           </Card>
@@ -324,5 +349,6 @@ export default async function DeskPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

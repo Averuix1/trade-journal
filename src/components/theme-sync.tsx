@@ -8,7 +8,7 @@ export function ThemeSync() {
   useEffect(() => {
     const stored = localStorage.getItem(THEME_KEY);
     const fromDom = document.documentElement.getAttribute('data-theme-pref');
-    const pref = isThemePref(stored) ? stored : isThemePref(fromDom) ? fromDom : 'dark';
+    const pref = isThemePref(stored) ? stored : isThemePref(fromDom) ? fromDom : 'matrix';
     applyTheme(pref);
     const mq = window.matchMedia('(prefers-color-scheme: light)');
     const onChange = () => {

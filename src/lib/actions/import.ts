@@ -3,7 +3,7 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { accounts, dayJournals, imports, instruments, playbooks, screenshots, sessionDefs, trades } from '@/lib/db/schema';
+import { accounts, bibleBookmarks, bibleState, dayJournals, imports, instruments, playbooks, screenshots, sessionDefs, trades } from '@/lib/db/schema';
 import type { ScreenshotLink } from '@/lib/db/schema';
 import { autoFees, autoPnl, autoR, rFromRisk, round2 } from '@/lib/calc';
 import {
@@ -462,11 +462,16 @@ export async function restoreBackup(_prev: FormState, formData: FormData): Promi
   if (!accountRows.length) return { error: 'No accounts in that backup.' };
 
   const idMap = new Map<number, number>();
+  const [quickLog] = await db.select().from(accounts).where(eq(accounts.isQuickLog, true)).limit(1);
   for (const row of accountRows) {
     const oldId = Number(row.id);
+    if (row.isQuickLog && quickLog) {
+      idMap.set(oldId, quickLog.id);
+      continue;
+    }
     const [created] = await db
       .insert(accounts)
-      .values({ ...row, id: undefined, name: `${row.name} (restored)`, createdAt: undefined })
+      .values({ ...row, id: undefined, name: `${row.name} (restored)`, isQuickLog: false, createdAt: undefined })
       .returning({ id: accounts.id });
     idMap.set(oldId, created.id);
   }
@@ -493,6 +498,30 @@ export async function restoreBackup(_prev: FormState, formData: FormData): Promi
     restored += 1;
   }
   for (const [accountId, dates] of touched) await recomputeAccountDays(accountId, dates);
+
+  const stateRows = (payload.bibleState as { book?: string; chapter?: number; updatedAt?: string }[]) ?? [];
+  for (const row of stateRows) {
+    if (!row.book || !row.chapter) continue;
+    await db
+      .insert(bibleState)
+      .values({ id: 1, book: row.book, chapter: Number(row.chapter), updatedAt: row.updatedAt ? new Date(row.updatedAt) : new Date() })
+      .onConflictDoUpdate({
+        target: bibleState.id,
+        set: { book: row.book, chapter: Number(row.chapter), updatedAt: new Date() },
+      });
+  }
+  const bookmarkRows = (payload.bibleBookmarks as { book?: string; chapter?: number; verse?: number | null; note?: string | null; createdAt?: string }[]) ?? [];
+  const bookmarkValues = bookmarkRows
+    .filter((row) => row.book && row.chapter)
+    .map((row) => ({
+      book: String(row.book),
+      chapter: Number(row.chapter),
+      verse: row.verse == null ? null : Number(row.verse),
+      note: row.note ?? null,
+      createdAt: row.createdAt ? new Date(row.createdAt) : new Date(),
+    }));
+  if (bookmarkValues.length) await db.insert(bibleBookmarks).values(bookmarkValues);
+
   revalidatePath('/', 'layout');
   return { ok: true, message: `Restored ${accountRows.length} account(s) and ${restored} trade(s).` };
 }

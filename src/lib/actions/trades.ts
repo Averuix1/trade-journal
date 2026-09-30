@@ -182,11 +182,39 @@ export async function updateTrade(_prev: FormState, formData: FormData): Promise
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Could not save the trade.' };
   }
-  await db.update(trades).set(values).where(eq(trades.id, id));
+  if (existing.externalId && values.accountId !== existing.accountId) {
+    const clash = await db
+      .select({ id: trades.id })
+      .from(trades)
+      .where(and(eq(trades.accountId, values.accountId), eq(trades.externalId, existing.externalId)));
+    if (clash.some((row) => row.id !== id)) {
+      const [target] = await db.select({ name: accounts.name }).from(accounts).where(eq(accounts.id, values.accountId));
+      return {
+        error: `${target?.name ?? 'That account'} already has a trade with external id “${existing.externalId}”. Pick a different account.`,
+      };
+    }
+  }
+  try {
+    await db.update(trades).set(values).where(eq(trades.id, id));
+  } catch (error) {
+    if (isExternalConflict(error)) {
+      return { error: 'That account already has a trade with the same external id. Pick a different account.' };
+    }
+    throw error;
+  }
+  if (values.accountId !== existing.accountId) {
+    await db.update(screenshots).set({ accountId: values.accountId, tradeDate: values.tradeDate }).where(eq(screenshots.tradeId, id));
+  }
   await attachScreenshots(formData, id, values.accountId, values.tradeDate);
   await recomputeAccountDays(values.accountId, [values.tradeDate, existing.tradeDate]);
+  if (existing.accountId !== values.accountId) await recomputeAccountDays(existing.accountId, [existing.tradeDate]);
   revalidatePath('/', 'layout');
-  return { ok: true, message: 'Trade updated.' };
+  return { ok: true, message: values.accountId !== existing.accountId ? 'Trade moved.' : 'Trade updated.' };
+}
+
+function isExternalConflict(error: unknown) {
+  const message = error instanceof Error ? `${error.message} ${String((error as { cause?: unknown }).cause ?? '')}` : String(error);
+  return message.includes('trades_external_uq') || message.includes('23505');
 }
 
 export async function saveTradeEntryMode(mode: 'quick' | 'detailed') {
@@ -292,21 +320,53 @@ export async function bulkDeleteTrades(formData: FormData) {
   revalidatePath('/', 'layout');
 }
 
-export async function moveTradesToAccount(formData: FormData) {
+export async function moveTradesToAccount(_prev: FormState, formData: FormData): Promise<FormState> {
   const ids = numList(formData, 'ids');
   const accountId = Number(formData.get('accountId'));
-  if (!ids.length || !accountId) return;
+  if (!ids.length) return { error: 'Select at least one trade.' };
+  if (!accountId) return { error: 'Pick an account.' };
   const [target] = await db.select().from(accounts).where(eq(accounts.id, accountId));
-  if (!target) return;
+  if (!target) return { error: 'That account is not available.' };
   const rows = await db.select().from(trades).where(inArray(trades.id, ids));
-  await db.update(trades).set({ accountId }).where(inArray(trades.id, ids));
-  await db.update(screenshots).set({ accountId }).where(inArray(screenshots.tradeId, ids));
-  for (const row of rows) await recomputeAccountDays(row.accountId, [row.tradeDate]);
-  await recomputeAccountDays(
-    accountId,
-    rows.map((r) => r.tradeDate),
+  if (!rows.length) return { error: 'Those trades are no longer there.' };
+  const residents = await db
+    .select({ id: trades.id, externalId: trades.externalId })
+    .from(trades)
+    .where(eq(trades.accountId, accountId));
+  const taken = new Set(
+    residents.filter((row) => !ids.includes(row.id) && row.externalId).map((row) => row.externalId as string),
   );
+  const seen = new Set<string>();
+  for (const row of rows) {
+    if (!row.externalId) continue;
+    if (taken.has(row.externalId) || seen.has(row.externalId)) {
+      return {
+        error: `${target.name} already has a trade with external id “${row.externalId}”. Nothing was moved.`,
+      };
+    }
+    seen.add(row.externalId);
+  }
+  try {
+    await db.transaction(async (tx) => {
+      await tx.update(trades).set({ accountId }).where(inArray(trades.id, ids));
+      await tx.update(screenshots).set({ accountId }).where(inArray(screenshots.tradeId, ids));
+    });
+  } catch (error) {
+    if (isExternalConflict(error)) {
+      return { error: `${target.name} already has a trade with the same external id. Nothing was moved.` };
+    }
+    throw error;
+  }
+  const byAccount = new Map<number, string[]>();
+  for (const row of rows) {
+    const list = byAccount.get(row.accountId) ?? [];
+    list.push(row.tradeDate);
+    byAccount.set(row.accountId, list);
+  }
+  for (const [fromId, dates] of byAccount) await recomputeAccountDays(fromId, dates);
+  await recomputeAccountDays(accountId, rows.map((row) => row.tradeDate));
   revalidatePath('/', 'layout');
+  return { ok: true, message: `Moved ${rows.length} trade${rows.length === 1 ? '' : 's'} to ${target.name}.` };
 }
 
 export async function clearTradesForAccount(formData: FormData) {

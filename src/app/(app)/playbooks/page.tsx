@@ -5,7 +5,7 @@ import { getPlaybookRules, getPlaybooks, getScope, getSettings, getTrades } from
 import { computeStats } from '@/lib/stats';
 import { fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
 
-export const metadata = { title: 'Playbooks — Trade Journal' };
+export const metadata = { title: 'Playbooks — Super-Journal' };
 
 export default async function PlaybooksPage() {
   const scope = await getScope();

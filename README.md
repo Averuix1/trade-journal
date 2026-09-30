@@ -1,4 +1,4 @@
-# Trade Journal
+# Super-Journal
 
 A private, single-user trading journal for futures (NQ / MNQ / ES / MES), built around prop-firm
 accounts such as Topstep evals and funded accounts as well as personal money.

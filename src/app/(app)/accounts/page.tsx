@@ -4,7 +4,7 @@ import { setAccountStage, setAccountStatus } from '@/lib/actions/accounts';
 import { getAccountMoney, getAccounts, groupAccounts } from '@/lib/queries';
 import { fmtMoney } from '@/lib/format';
 
-export const metadata = { title: 'Accounts — Trade Journal' };
+export const metadata = { title: 'Accounts — Super-Journal' };
 
 export default async function AccountsPage() {
   const accounts = await getAccounts();
@@ -39,7 +39,9 @@ export default async function AccountsPage() {
                         <Link href={`/accounts/${account.id}`} className="text-sm font-medium text-fg-strong hover:underline">
                           {account.name}
                         </Link>
-                        {account.type === 'PROP' ? (
+                        {account.isQuickLog ? (
+                          <Badge>Quick log</Badge>
+                        ) : account.type === 'PROP' ? (
                           <Badge tone={account.stage === 'FUNDED' ? 'up' : account.stage === 'BLOWN' ? 'down' : 'neutral'}>
                             {account.firm} · {account.stage}
                           </Badge>
@@ -49,18 +51,27 @@ export default async function AccountsPage() {
                         {account.status === 'ARCHIVED' && <Badge tone="warn">Archived</Badge>}
                       </div>
                       <div className="mt-0.5 text-[11px] text-dim">
-                        Since {account.startDate} · size {fmtMoney(account.type === 'PROP' ? (account.accountSize ?? 0) : account.startingBalance)}
-                        {account.resetOfAccountId ? ` · reset of #${account.resetOfAccountId}` : ''}
+                        {account.isQuickLog
+                          ? 'No balance, drawdown or fees. Trades only.'
+                          : `Since ${account.startDate} · size ${fmtMoney(account.type === 'PROP' ? (account.accountSize ?? 0) : account.startingBalance)}${account.resetOfAccountId ? ` · reset of #${account.resetOfAccountId}` : ''}`}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="tabular text-sm font-semibold text-fg-strong">{fmtMoney(m.balance)}</div>
-                      <div className="text-[11px]">
-                        <MoneyText value={m.netPnl} />
-                      </div>
+                      {account.isQuickLog ? (
+                        <div className="text-[11px] text-dim">
+                          P&L <MoneyText value={m.netPnl} />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="tabular text-sm font-semibold text-fg-strong">{fmtMoney(m.balance)}</div>
+                          <div className="text-[11px]">
+                            <MoneyText value={m.netPnl} />
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-1">
-                      {account.type === 'PROP' && account.stage !== 'FUNDED' && (
+                      {!account.isQuickLog && account.type === 'PROP' && account.stage !== 'FUNDED' && (
                         <form action={setAccountStage}>
                           <input type="hidden" name="id" value={account.id} />
                           <input type="hidden" name="stage" value="FUNDED" />
@@ -69,7 +80,7 @@ export default async function AccountsPage() {
                           </button>
                         </form>
                       )}
-                      {account.type === 'PROP' && account.stage !== 'BLOWN' && (
+                      {!account.isQuickLog && account.type === 'PROP' && account.stage !== 'BLOWN' && (
                         <form action={setAccountStage}>
                           <input type="hidden" name="id" value={account.id} />
                           <input type="hidden" name="stage" value="BLOWN" />
@@ -78,13 +89,15 @@ export default async function AccountsPage() {
                           </button>
                         </form>
                       )}
-                      <form action={setAccountStatus}>
-                        <input type="hidden" name="id" value={account.id} />
-                        <input type="hidden" name="status" value={account.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE'} />
-                        <button className="btn btn-sm btn-ghost" type="submit">
-                          {account.status === 'ACTIVE' ? 'Archive' : 'Unarchive'}
-                        </button>
-                      </form>
+                      {!account.isQuickLog && (
+                        <form action={setAccountStatus}>
+                          <input type="hidden" name="id" value={account.id} />
+                          <input type="hidden" name="status" value={account.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE'} />
+                          <button className="btn btn-sm btn-ghost" type="submit">
+                            {account.status === 'ACTIVE' ? 'Archive' : 'Unarchive'}
+                          </button>
+                        </form>
+                      )}
                       <Link className="btn btn-sm btn-ghost" href={`/accounts/${account.id}`}>
                         Edit
                       </Link>

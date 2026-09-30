@@ -1,5 +1,6 @@
 // Local verification pass: exercises the main flows and writes screenshots.
 //   node scripts/verify.mjs [baseUrl] [outDir]
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, readdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 
@@ -30,6 +31,9 @@ const shot = async (name) => {
 };
 
 try {
+  const bibleRefs = spawnSync('npx', ['tsx', 'scripts/check-bible-refs.ts'], { encoding: 'utf8' });
+  check('Every curated verse resolves in the World English Bible', bibleRefs.status === 0, (bibleRefs.stdout || bibleRefs.stderr || '').trim());
+
   // --- login ---
   await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' });
   await shot('01-login');
@@ -58,9 +62,15 @@ try {
   check('Account dropdown opens', switcherOpen);
   check('Account dropdown is grouped', (await page.getByText('Blown / archived').count()) > 0);
   await page.getByRole('button', { name: 'All accounts', exact: true }).click();
-  await page.waitForTimeout(1200);
-  check('Switching to All accounts works', (await page.getByText('All accounts').count()) > 0);
-  await page.getByRole('button', { name: /All accounts/ }).first().click();
+  let switchedAll = false;
+  try {
+    await page.getByRole('heading', { name: 'All accounts' }).waitFor({ timeout: 8000 });
+    switchedAll = true;
+  } catch {
+    switchedAll = false;
+  }
+  check('Switching to All accounts works', switchedAll);
+  await page.getByRole('banner').getByRole('button').first().click();
   await page.waitForTimeout(250);
   await page.getByRole('button', { name: /50K Combine #2/ }).click();
   await page.waitForTimeout(1200);
@@ -129,7 +139,7 @@ try {
 
   // --- trades + add form ---
   const headerBalance = async () => {
-    const text = await page.locator('header').getByText(/balance /).innerText();
+    const text = await page.getByRole('banner').getByText(/balance /).innerText();
     return Number(text.replace(/[^0-9.-]/g, ''));
   };
   const deleteRow = async (pnlText, rText) => {
@@ -161,13 +171,17 @@ try {
   check('Quick win shows planned 2R', winPlan.includes('+2.00R'), winPlan);
   const balanceBefore = await headerBalance();
   const winDay = await page.locator('#tradeDate').inputValue();
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Quick win saves', await page.getByText('Trade logged.').isVisible());
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   const balanceAfterWin = await headerBalance();
+  check('Quick win saves', balanceAfterWin - balanceBefore === 500, `${balanceBefore} -> ${balanceAfterWin}`);
   check('Quick win raises the balance by 500', balanceAfterWin - balanceBefore === 500, `${balanceBefore} -> ${balanceAfterWin}`);
   await page.goto(`${BASE}/calendar?day=${winDay}`, { waitUntil: 'networkidle' });
-  check('Calendar shows the quick win', await page.getByText('+$500').first().isVisible() && await page.getByText('+2.00R').first().isVisible());
+  const winCell = page.locator('a[href*="day="]').filter({ hasText: '+$500' }).filter({ hasText: '+2.00R' });
+  check('Calendar shows the quick win', (await winCell.count()) > 0, `cells ${await winCell.count()}`);
   await page.goto(`${BASE}/stats`, { waitUntil: 'networkidle' });
   const plannedStat = page.getByText('Avg planned RR', { exact: true }).locator('..');
   check('Stats show average planned RR', await plannedStat.isVisible());
@@ -181,10 +195,13 @@ try {
   const lossLive = await page.locator('#live-result').innerText();
   check('Quick loss shows -$250 and -1R', lossLive.includes('-$250.00') && lossLive.includes('-1.00R'), lossLive);
   const balanceBeforeLoss = await headerBalance();
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Quick loss saves', await page.getByText('Trade logged.').isVisible());
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   const balanceAfterLoss = await headerBalance();
+  check('Quick loss saves', balanceBeforeLoss - balanceAfterLoss === 250, `${balanceBeforeLoss} -> ${balanceAfterLoss}`);
   check('Quick loss lowers the balance by 250', balanceBeforeLoss - balanceAfterLoss === 250, `${balanceBeforeLoss} -> ${balanceAfterLoss}`);
   await deleteRow('-$250.00', '-1.00R');
 
@@ -195,9 +212,14 @@ try {
   await page.fill('#customPnl', '125');
   const partialLive = await page.locator('#live-result').innerText();
   check('Quick partial shows +$125 and +0.50R', partialLive.includes('+$125.00') && partialLive.includes('+0.50R'), partialLive);
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Quick partial saves', await page.getByText('Trade logged.').isVisible());
+  const balanceBeforePartial = await headerBalance();
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  const balanceAfterPartial = await headerBalance();
+  check('Quick partial saves', balanceAfterPartial - balanceBeforePartial === 125, `${balanceBeforePartial} -> ${balanceAfterPartial}`);
   await deleteRow('+$125.00', '+0.50R');
 
   await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
@@ -214,11 +236,13 @@ try {
   await shot('08-trades-add-form');
 
   const rowsBefore = await page.locator('tbody tr').count();
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Trade saves', await page.getByText('Trade logged.').isVisible());
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
   await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
   const rowsAfter = await page.locator('tbody tr').count();
+  check('Trade saves', rowsAfter > rowsBefore, `${rowsBefore} -> ${rowsAfter}`);
   check('New trade appears in the list', rowsAfter >= rowsBefore, `${rowsBefore} -> ${rowsAfter}`);
 
   // delete it again so the demo data stays clean
@@ -272,8 +296,18 @@ try {
   const sheetLabel = await sheetButton.innerText();
   check('Sheet preview counts 18 trades', /Import 18 trades/.test(sheetLabel), sheetLabel);
   await sheetButton.click();
-  await page.waitForTimeout(4000);
-  check('Sheet import reports 18 trades', await page.getByText(/Imported 18 trade/).isVisible());
+  let sheetImported = false;
+  {
+    const start = Date.now();
+    while (Date.now() - start < 20000) {
+      if (await page.getByText(/Imported 18 trade/).isVisible().catch(() => false)) {
+        sheetImported = true;
+        break;
+      }
+      await page.waitForTimeout(500);
+    }
+  }
+  check('Sheet import reports 18 trades', sheetImported);
 
   await page.goto(`${BASE}/calendar?month=2026-09&day=2026-09-14`, { waitUntil: 'networkidle' });
   await page.getByLabel('Rules followed?').scrollIntoViewIfNeeded();
@@ -338,9 +372,189 @@ try {
   await page.waitForTimeout(1600);
   check('General settings save', await page.getByText('Settings saved.').isVisible());
 
+  // --- bible ---
+  await page.goto(`${BASE}/bible`, { waitUntil: 'networkidle' });
+  await page.waitForSelector('text=Verse of the moment');
+  check('Bible tab shows a verse', await page.getByRole('button', { name: 'New verse' }).isVisible());
+  const verseBefore = await page.locator('p.font-serif').first().innerText();
+  await page.getByRole('button', { name: 'New verse' }).click();
+  const verseAfter = await page.locator('p.font-serif').first().innerText();
+  check('New verse does not repeat the last one', verseBefore !== verseAfter);
+  check('Verse card links into the chapter', await page.getByRole('link', { name: 'Read in context' }).isVisible());
+  const bookSlugs = await page.locator('[data-bible-book]').evaluateAll((els) => els.map((el) => el.getAttribute('data-bible-book')));
+  check('Bible lists all 66 books', bookSlugs.length === 66, String(bookSlugs.length));
+  const closedBooks = [];
+  for (const slug of bookSlugs) {
+    const res = await page.request.get(`${BASE}/bible/${slug}/1`);
+    if (!res.ok()) closedBooks.push(slug);
+  }
+  check('All 66 books open', closedBooks.length === 0, closedBooks.slice(0, 5).join(', '));
+
+  await page.goto(`${BASE}/bible/john/1`, { waitUntil: 'networkidle' });
+  check('Chapter shows WEB text', await page.getByRole('button', { name: 'Verse 1', exact: true }).isVisible());
+  await page.getByRole('button', { name: 'Verse 1', exact: true }).click();
+  await page.fill('#verse-note', 'local bookmark note');
+  await page.getByRole('button', { name: 'Save verse bookmark' }).click();
+  await page.waitForTimeout(1200);
+  check('Verse bookmark saves', await page.getByText('Verse bookmarked.').isVisible());
+  await page.goto(`${BASE}/bible`, { waitUntil: 'networkidle' });
+  check('Continue reading resumes the chapter', await page.getByRole('link', { name: /Continue reading · John 1/ }).isVisible());
+  const note = page.getByLabel('Note for John 1:1');
+  check('Bookmark is listed', await note.isVisible());
+  await note.fill('edited bookmark note');
+  await page.getByRole('button', { name: 'Save note' }).first().click();
+  await page.waitForTimeout(1200);
+  check('Bookmark note edits', await page.getByText('Note saved.').isVisible());
+  await page.locator('div').filter({ has: page.getByLabel('Note for John 1:1') }).getByRole('button', { name: 'Delete' }).click();
+  await page.waitForTimeout(1200);
+  check('Bookmark deletes', (await page.getByLabel('Note for John 1:1').count()) === 0);
+
+  await page.goto(`${BASE}/bible/malachi/4`, { waitUntil: 'networkidle' });
+  await page.getByRole('link', { name: 'Next · Matthew 1' }).first().click();
+  await page.waitForURL('**/bible/matthew/1');
+  check('Next chapter crosses into Matthew', page.url().includes('/bible/matthew/1'));
+  await page.getByRole('link', { name: 'Previous · Malachi 4' }).first().click();
+  await page.waitForURL('**/bible/malachi/4');
+  check('Previous chapter crosses back to Malachi', page.url().includes('/bible/malachi/4'));
+
+  await page.goto(`${BASE}/bible/acts/8`, { waitUntil: 'networkidle' });
+  check('Blank WEB verses are not rendered', (await page.getByRole('button', { name: 'Verse 37', exact: true }).count()) === 0);
+  check(
+    'Verse numbers stay put after a blank',
+    (await page.getByRole('button', { name: 'Verse 36', exact: true }).isVisible()) &&
+      (await page.getByRole('button', { name: 'Verse 38', exact: true }).isVisible()),
+  );
+  check('Bible attributes the World English Bible', await page.getByText('World English Bible (public domain)').isVisible());
+
+  // --- quick log ---
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await page.getByRole('banner').getByRole('button').first().click();
+  await page.getByRole('button', { name: /^Quick log/ }).click();
+  await page.waitForTimeout(1200);
+  await page.goto(`${BASE}/tank`, { waitUntil: 'networkidle' });
+  check('Tank is not applicable for Quick log', await page.getByText('Not applicable for Quick log').isVisible());
+  await page.goto(`${BASE}/money`, { waitUntil: 'networkidle' });
+  check('Money is not applicable for Quick log', await page.getByText('Not applicable for Quick log').isVisible());
+
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  if ((await page.locator('#takeProfit').count()) === 0) {
+    await page.getByRole('button', { name: 'Quick', exact: true }).click();
+  }
+  check('Quick log trade form hides fees', (await page.locator('#quickFees').count()) === 0);
+  await page.fill('#tradeDate', '2020-02-02');
+  await page.fill('#plannedRisk', '200');
+  await page.fill('#takeProfit', '400');
+  await page.getByRole('button', { name: 'Win', exact: true }).click();
+  await page.getByRole('button', { name: 'Log trade' }).click();
+  let quickSaved = false;
+  {
+    const start = Date.now();
+    while (Date.now() - start < 15000) {
+      if (await page.getByText('Trade logged.').isVisible().catch(() => false)) {
+        quickSaved = true;
+        break;
+      }
+      await page.waitForTimeout(400);
+    }
+  }
+  if (!quickSaved) {
+    await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+    quickSaved = (await page.locator('tbody tr').filter({ hasText: '2020-02-02' }).count()) > 0;
+  }
+  check('Quick log trade saves without account balance', quickSaved);
+
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  check('Desk works for Quick log', await page.getByText('not applicable for Quick log').isVisible());
+  check('Desk lists the Quick log trade', await page.getByText('2020-02-02').first().isVisible());
+  await page.goto(`${BASE}/calendar?month=2020-02&day=2020-02-02`, { waitUntil: 'networkidle' });
+  check('Calendar shows the Quick log trade', await page.getByText('+$400').first().isVisible());
+  await page.goto(`${BASE}/stats`, { waitUntil: 'networkidle' });
+  check('Stats render for Quick log', await page.getByRole('heading', { name: 'By month' }).isVisible());
+  check('Entry timing renders for Quick log', await page.getByRole('heading', { name: 'Entry timing' }).isVisible());
+
+  await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+  const quickRow = page.locator('tbody tr').filter({ hasText: '2020-02-02' }).first();
+  const editHref = await quickRow.getByRole('link', { name: 'Edit' }).getAttribute('href');
+  await page.goto(`${BASE}${editHref}`, { waitUntil: 'networkidle' });
+  await page.selectOption('#accountId', { label: 'Personal futures' });
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Save trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await page.getByRole('banner').getByRole('button').first().click();
+  await page.getByRole('button', { name: /Personal futures/ }).click();
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+  check('A trade can move to another account', (await page.locator('tbody tr').filter({ hasText: '2020-02-02' }).count()) > 0);
+
+  await page.goto(`${BASE}/accounts/new`, { waitUntil: 'networkidle' });
+  await page.getByRole('main').getByText('Personal', { exact: true }).click();
+  await page.fill('#name', 'Temp Keep Book');
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await page.waitForURL(`${BASE}/`, { timeout: 15000 });
+  await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
+  if ((await page.locator('#takeProfit').count()) === 0) {
+    await page.getByRole('button', { name: 'Quick', exact: true }).click();
+  }
+  await page.fill('#tradeDate', '2020-03-03');
+  await page.fill('#plannedRisk', '150');
+  await page.fill('#takeProfit', '150');
+  await page.getByRole('button', { name: 'Win', exact: true }).click();
+  await page.getByRole('button', { name: 'Log trade' }).click();
+  await page.waitForTimeout(2000);
+  check('Trade on a temporary account saves', await page.getByText('Trade logged.').isVisible());
+  await page.goto(`${BASE}/calendar?month=2020-03&day=2020-03-03`, { waitUntil: 'networkidle' });
+  await page.fill('#notes', 'temp day note');
+  await page.getByRole('button', { name: 'Save journal' }).click();
+  await page.waitForTimeout(1200);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await page.getByRole('banner').getByRole('button').first().click();
+  await page.getByRole('button', { name: /^Quick log/ }).click();
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/calendar?month=2020-03&day=2020-03-03`, { waitUntil: 'networkidle' });
+  await page.fill('#notes', 'quick day note');
+  await page.getByRole('button', { name: 'Save journal' }).click();
+  await page.waitForTimeout(1200);
+  await page.goto(`${BASE}/accounts`, { waitUntil: 'networkidle' });
+  await page.getByRole('link', { name: 'Temp Keep Book' }).click();
+  await page.waitForURL('**/accounts/*');
+  await page.getByRole('button', { name: 'Delete account…' }).click();
+  await page.getByRole('button', { name: 'Delete account but keep its trades (move to Quick log)' }).click();
+  await page.waitForURL('**/accounts', { timeout: 15000 });
+  check('Kept-trades delete removes the account', (await page.getByText('Temp Keep Book').count()) === 0);
+  await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+  const kept = page.locator('tbody tr').filter({ hasText: '2020-03-03' }).first();
+  check('Kept trades land in Quick log', await kept.isVisible() && (await kept.innerText()).includes('Quick log'));
+  check('Kept trades keep the former account label', (await kept.innerText()).includes('from Temp Keep Book'));
+  await page.goto(`${BASE}/calendar?month=2020-03&day=2020-03-03`, { waitUntil: 'networkidle' });
+  const mergedNotes = await page.locator('#notes').inputValue();
+  check('Day notes merge onto Quick log', mergedNotes.includes('quick day note') && mergedNotes.includes('temp day note'), mergedNotes);
+  await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+  await page.locator('tbody tr').filter({ hasText: '2020-03-03' }).first().getByRole('button', { name: 'Delete' }).click();
+  await page.waitForTimeout(1200);
+
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await page.getByRole('banner').getByRole('button').first().click();
+  await page.getByRole('button', { name: /Personal futures/ }).click();
+  await page.waitForTimeout(1000);
+  await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+  const movedRow = page.locator('tbody tr').filter({ hasText: '2020-02-02' }).first();
+  if (await movedRow.count()) {
+    await movedRow.getByRole('button', { name: 'Delete' }).click();
+    await page.waitForTimeout(1200);
+  }
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await page.getByRole('banner').getByRole('button').first().click();
+  await page.getByRole('button', { name: /50K Combine #2/ }).click();
+  await page.waitForTimeout(800);
+
   // --- backup ---
   const backup = await page.request.get(`${BASE}/api/backup`);
   check('JSON backup downloads', backup.ok(), `${backup.status()}`);
+  const backupBody = await backup.json();
+  check('Backup includes bible tables', Array.isArray(backupBody.bibleBookmarks) && Array.isArray(backupBody.bibleState));
+  check('Backup includes Quick log', backupBody.accounts?.some((account) => account.isQuickLog === true));
 
   // --- auth guard ---
   const anon = await browser.newContext();

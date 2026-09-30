@@ -1,11 +1,13 @@
+import { cookies } from 'next/headers';
 import { ThemeSetting } from '@/components/theme-setting';
+import { isThemePref, THEME_KEY, type ThemePref } from '@/lib/theme';
 import { Card } from '@/components/ui';
 import { ChecklistForm, GeneralSettingsForm, InstrumentsForm, MistakeTagForm, SessionsForm } from '@/components/settings-forms';
 import { deleteMistakeTag, deleteSession } from '@/lib/actions/settings';
 import { unhideAllDays } from '@/lib/actions/journal';
 import { getHiddenDayCount, getInstruments, getMistakeTags, getScope, getSessionDefs, getSettings } from '@/lib/queries';
 
-export const metadata = { title: 'Settings — Trade Journal' };
+export const metadata = { title: 'Settings — Super-Journal' };
 
 export default async function SettingsPage() {
   const [config, instruments, sessions, tags, scope] = await Promise.all([
@@ -16,11 +18,13 @@ export default async function SettingsPage() {
     getScope(),
   ]);
   const hiddenCount = await getHiddenDayCount(scope.accountIds);
+  const prefCookie = (await cookies()).get(THEME_KEY)?.value;
+  const themePref: ThemePref = isThemePref(prefCookie) ? prefCookie : 'matrix';
 
   return (
     <div className="space-y-5">
       <Card title="Appearance">
-        <ThemeSetting />
+        <ThemeSetting initialPref={themePref} />
       </Card>
 
       <Card title="General">

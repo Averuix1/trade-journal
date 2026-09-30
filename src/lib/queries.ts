@@ -96,6 +96,22 @@ async function runBootstrap(): Promise<void> {
     );
   }
   if (writes.length) await Promise.all(writes);
+  await ensureQuickLog();
+}
+
+async function ensureQuickLog() {
+  const [existing] = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.isQuickLog, true)).limit(1);
+  if (existing) return;
+  await db.insert(accounts).values({
+    name: 'Quick log',
+    type: 'PERSONAL',
+    status: 'ACTIVE',
+    startingBalance: 0,
+    startDate: new Date().toISOString().slice(0, 10),
+    isQuickLog: true,
+    sortOrder: 1000,
+    notes: 'Trades logged without a prop or personal account.',
+  });
 }
 
 function idKey(ids: number[]): string {
@@ -161,7 +177,7 @@ export async function getSelectedAccountId(all: Account[]): Promise<number | nul
   if (raw === 'all') return null;
   const id = Number(raw);
   if (Number.isFinite(id) && all.some((a) => a.id === id)) return id;
-  const firstActive = all.find((a) => a.status === 'ACTIVE') ?? all[0];
+  const firstActive = all.find((a) => a.status === 'ACTIVE' && !a.isQuickLog) ?? all.find((a) => !a.isQuickLog) ?? all[0];
   return firstActive?.id ?? null;
 }
 
@@ -386,6 +402,7 @@ export function getAccountMoney(list: Account[]): Promise<Map<number, AccountMon
 
 export function groupAccounts(list: Account[]) {
   const groups: { label: string; accounts: Account[] }[] = [
+    { label: 'Quick log', accounts: [] },
     { label: 'Active', accounts: [] },
     { label: 'Funded', accounts: [] },
     { label: 'Evals', accounts: [] },
@@ -394,7 +411,8 @@ export function groupAccounts(list: Account[]) {
   ];
   const byLabel = (label: string) => groups.find((g) => g.label === label)!;
   for (const a of list) {
-    if (a.status === 'ARCHIVED' || a.stage === 'BLOWN') byLabel('Blown / archived').accounts.push(a);
+    if (a.isQuickLog) byLabel('Quick log').accounts.push(a);
+    else if (a.status === 'ARCHIVED' || a.stage === 'BLOWN') byLabel('Blown / archived').accounts.push(a);
     else if (a.type === 'PERSONAL') byLabel('Personal').accounts.push(a);
     else if (a.stage === 'FUNDED') byLabel('Funded').accounts.push(a);
     else if (a.stage === 'EVAL') byLabel('Evals').accounts.push(a);

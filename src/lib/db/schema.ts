@@ -49,6 +49,8 @@ export const accounts = pgTable('accounts', {
   resetOfAccountId: integer('reset_of_account_id'),
   notes: text('notes'),
   sortOrder: integer('sort_order').notNull().default(0),
+  /** Built-in space for trades that are not tied to a prop or personal account. */
+  isQuickLog: boolean('is_quick_log').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -92,6 +94,8 @@ export const trades = pgTable(
     notes: text('notes'),
     importId: integer('import_id'),
     externalId: text('external_id'),
+    /** Name of an account that was deleted while this trade was kept. */
+    formerAccount: text('former_account'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex('trades_external_uq').on(t.accountId, t.externalId)],
@@ -214,6 +218,23 @@ export const imports = pgTable('imports', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** One row (id = 1): the chapter the reader last opened. */
+export const bibleState = pgTable('bible_state', {
+  id: integer('id').primaryKey().default(1),
+  book: text('book').notNull(),
+  chapter: integer('chapter').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const bibleBookmarks = pgTable('bible_bookmarks', {
+  id: serial('id').primaryKey(),
+  book: text('book').notNull(),
+  chapter: integer('chapter').notNull(),
+  verse: integer('verse'),
+  note: text('note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const settings = pgTable('settings', {
   id: integer('id').primaryKey().default(1),
   timezone: text('timezone').notNull().default('Australia/Sydney'),
@@ -246,3 +267,5 @@ export type Screenshot = typeof screenshots.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 export type ImportBatch = typeof imports.$inferSelect;
 export type MistakeTag = typeof mistakeTags.$inferSelect;
+export type BibleState = typeof bibleState.$inferSelect;
+export type BibleBookmark = typeof bibleBookmarks.$inferSelect;

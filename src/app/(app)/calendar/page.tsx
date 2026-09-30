@@ -18,7 +18,7 @@ import { fmtMoney, fmtPct, fmtR, fmtRShort, fmtSigned, fmtSignedCompact } from '
 import { addDays, daysInMonth, isoWeekKey, monthName, startOfWeek, todayKey } from '@/lib/time';
 import { BREAK_LABELS } from '@/lib/defaults';
 
-export const metadata = { title: 'Calendar — Trade Journal' };
+export const metadata = { title: 'Calendar — Super-Journal' };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 

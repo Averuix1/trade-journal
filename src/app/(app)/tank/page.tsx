@@ -7,7 +7,7 @@ import { propStatus } from '@/lib/prop';
 import { fmtMoney, fmtPct } from '@/lib/format';
 import { todayKey } from '@/lib/time';
 
-export const metadata = { title: 'Tank — Trade Journal' };
+export const metadata = { title: 'Tank — Super-Journal' };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -22,7 +22,17 @@ export default async function TankPage({ searchParams }: { searchParams: SearchP
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
 
-  const account = scope.account ?? scope.accounts[0];
+  const account = scope.account ?? scope.accounts.find((item) => !item.isQuickLog) ?? scope.accounts[0];
+  if (account.isQuickLog) {
+    return (
+      <Card title="Tank">
+        <p className="text-sm text-dim">
+          Not applicable for Quick log. Tank needs a balance and drawdown rules, and Quick log does not keep either.
+          Switch to a prop or personal account.
+        </p>
+      </Card>
+    );
+  }
   const [config, instruments, money, trades, ledger] = await Promise.all([
     getSettings(),
     getInstruments(),

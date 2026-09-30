@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { AccountSwitcher } from '@/components/account-switcher';
 import { Nav } from '@/components/nav';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { THEME_RESOLVED_KEY } from '@/lib/theme';
+import { isThemePref, THEME_KEY, type ThemePref } from '@/lib/theme';
 import { logout } from '@/lib/actions/auth';
 import {
   getAccountMoney,
@@ -20,7 +20,8 @@ import { todayKey } from '@/lib/time';
 export const dynamic = 'force-dynamic';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const light = (await cookies()).get(THEME_RESOLVED_KEY)?.value === 'light';
+  const prefCookie = (await cookies()).get(THEME_KEY)?.value;
+  const themePref: ThemePref = isThemePref(prefCookie) ? prefCookie : 'matrix';
   const [scope, config, sessions] = await Promise.all([getScope(), getSettings(), getSessionDefs()]);
   const today = todayKey('America/New_York');
   const [money, hiddenDays, todayTrades] = await Promise.all([
@@ -31,6 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       : Promise.resolve([]),
   ]);
 
+  const quickLog = Boolean(scope.account?.isQuickLog);
   const balance = scope.account
     ? (money.get(scope.account.id)?.balance ?? 0)
     : [...money.values()].reduce((sum, m) => sum + m.balance, 0);
@@ -47,8 +49,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       <header className="app-header sticky top-0 z-30">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
-          <Link href="/" className="mr-1 text-sm font-semibold tracking-[0.18em] text-fg">
-            TJ
+          <Link href="/" className="wordmark mr-1 text-sm font-semibold tracking-[0.14em] text-fg" aria-label="Super-Journal">
+            <span className="sm:hidden">SJ</span>
+            <span className="hidden sm:inline">Super-Journal</span>
           </Link>
           <AccountSwitcher groups={groupAccounts(scope.accounts)} current={scope.account} />
           {scope.account && (
@@ -57,7 +60,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
           )}
           {scope.account && (
-            <span className="pill">{scope.account.type === 'PROP' ? (scope.account.firm ?? 'Prop') : 'Personal'}</span>
+            <span className="pill">
+              {quickLog ? 'Quick log' : scope.account.type === 'PROP' ? (scope.account.firm ?? 'Prop') : 'Personal'}
+            </span>
           )}
           <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-dim">
             {hiddenDays > 0 && (
@@ -65,11 +70,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 hiding {hiddenDays} day{hiddenDays === 1 ? '' : 's'}
               </Link>
             )}
-            {scope.accounts.length > 0 && <span className="tabular">balance {fmtMoney(balance)}</span>}
+            {scope.accounts.length > 0 && !quickLog && <span className="tabular">balance {fmtMoney(balance)}</span>}
             {scope.accounts.length > 0 && counters.length > 0 && (
               <span className="tabular hidden sm:inline">{counters.join(' · ')}</span>
             )}
-            <ThemeToggle initialLight={light} />
+            <ThemeToggle initialPref={themePref} />
             <form action={logout}>
               <button className="btn btn-sm btn-ghost" type="submit">
                 Sign out

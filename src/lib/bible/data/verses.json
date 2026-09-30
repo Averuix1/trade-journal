@@ -1,0 +1,682 @@
+[
+  {
+    "ref": "Proverbs 21:5",
+    "translation": "WEB",
+    "text": "The plans of the diligent surely lead to profit; and everyone who is hasty surely rushes to poverty.",
+    "meaning": "Careful, diligent planning tends to lead to gain, while rushing leads to lack.",
+    "trading": "Trade a written plan with defined entry, stop and target, not an impulse. Hasty, unplanned trades are where accounts get drained.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Proverbs 16:3",
+    "translation": "WEB",
+    "text": "Commit your deeds to Yahweh, and your plans shall succeed.",
+    "meaning": "Entrust your work to God and your plans will be established.",
+    "trading": "Do your prep before the open and hand the outcome over. You control your process, not the market's next tick.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Proverbs 13:11",
+    "translation": "WEB",
+    "text": "Wealth gained dishonestly dwindles away, but he who gathers by hand makes it grow.",
+    "meaning": "Wealth gained dishonestly or in a rush shrinks, but wealth gathered steadily grows.",
+    "trading": "Small, consistent gains compound; chasing a quick payout or over-sizing to hit the profit target fast is how evaluations get blown.",
+    "theme": "greed"
+  },
+  {
+    "ref": "Proverbs 28:20",
+    "translation": "WEB",
+    "text": "A faithful man is rich with blessings; but one who is eager to be rich will not go unpunished.",
+    "meaning": "A faithful person is blessed, but someone in a hurry to get rich will not escape the consequences.",
+    "trading": "Wanting to get rich fast pushes you into oversizing and breaking rules. Stay faithful to your process and let the equity curve build.",
+    "theme": "greed"
+  },
+  {
+    "ref": "Proverbs 14:29",
+    "translation": "WEB",
+    "text": "He who is slow to anger has great understanding, but he who has a quick temper displays folly.",
+    "meaning": "Being slow to anger shows understanding, while a hot temper displays foolishness.",
+    "trading": "After a loss, wait before clicking again. Slowing down is what stops frustration turning into a string of revenge trades.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Proverbs 16:32",
+    "translation": "WEB",
+    "text": "One who is slow to anger is better than the mighty; one who rules his spirit, than he who takes a city.",
+    "meaning": "Self-control over your temper is worth more than military strength.",
+    "trading": "Controlling your own reactions is a bigger edge than any setup. Beating your impulse to revenge trade is the real win.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Proverbs 15:22",
+    "translation": "WEB",
+    "text": "Where there is no counsel, plans fail; but in a multitude of counselors they are established.",
+    "meaning": "Plans fail without counsel, but succeed when many advisers are consulted.",
+    "trading": "Review trades with a journal, mentor or trading group. Outside eyes catch the habits you can't see in yourself.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Proverbs 11:1",
+    "translation": "WEB",
+    "text": "A false balance is an abomination to Yahweh, but accurate weights are his delight.",
+    "meaning": "Dishonest scales are detestable to God, while accurate weights please him.",
+    "trading": "Be honest in your own accounting: log every trade as it happened and follow the risk rules you set, no fudging the numbers.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Proverbs 19:2",
+    "translation": "WEB",
+    "text": "It isn’t good to have zeal without knowledge; nor being hasty with one’s feet and missing the way.",
+    "meaning": "Zeal without knowledge is not good, and rushing ahead makes you miss the way.",
+    "trading": "Enthusiasm isn't an edge. Don't size up or jump into a setup you haven't tested or understood.",
+    "theme": "patience"
+  },
+  {
+    "ref": "Proverbs 24:16",
+    "translation": "WEB",
+    "text": "for a righteous man falls seven times, and rises up again; but the wicked are overthrown by calamity.",
+    "meaning": "The righteous person may fall many times but gets up again, while the wicked are brought down by disaster.",
+    "trading": "Losing trades and drawdowns happen to everyone. What matters is getting back up and following the plan, not blowing up.",
+    "theme": "perseverance"
+  },
+  {
+    "ref": "Proverbs 27:12",
+    "translation": "WEB",
+    "text": "A prudent man sees danger and takes refuge; but the simple pass on, and suffer for it.",
+    "meaning": "A prudent person sees danger coming and takes cover, while the naive keep going and pay for it.",
+    "trading": "When conditions turn dangerous (news, thin liquidity, a losing streak), step aside or cut size instead of pushing on.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Ecclesiastes 3:1-4",
+    "translation": "WEB",
+    "text": "For everything there is a season, and a time for every purpose under heaven: a time to be born, and a time to die; a time to plant, and a time to pluck up that which is planted; a time to kill, and a time to heal; a time to break down, and a time to build up; a time to weep, and a time to laugh; a time to mourn, and a time to dance;",
+    "meaning": "Life has seasons and appointed times, including times of loss and of healing, weeping and laughing.",
+    "trading": "Markets have seasons too: trending, choppy, quiet. There's a time to trade and a time to sit out, and drawdowns pass.",
+    "theme": "patience"
+  },
+  {
+    "ref": "Ecclesiastes 5:10",
+    "translation": "WEB",
+    "text": "He who loves silver shall not be satisfied with silver; nor he who loves abundance, with increase: this also is vanity.",
+    "meaning": "Whoever loves money never has enough; love of wealth is never satisfied.",
+    "trading": "If no profit ever feels like enough, you'll keep overtrading. Set a daily target or max and stop when you hit it.",
+    "theme": "greed"
+  },
+  {
+    "ref": "Ecclesiastes 11:4",
+    "translation": "WEB",
+    "text": "He who observes the wind won’t sow; and he who regards the clouds won’t reap.",
+    "meaning": "Someone who keeps watching the wind and clouds never sows or reaps; waiting for perfect conditions means nothing gets done.",
+    "trading": "Waiting for a perfect setup can paralyse you. Take valid setups from your plan with defined risk, then accept the outcome.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Psalm 37:7",
+    "translation": "WEB",
+    "text": "Rest in Yahweh, and wait patiently for him. Don’t fret because of him who prospers in his way, because of the man who makes wicked plots happen.",
+    "meaning": "Rest in God, wait patiently, and don't fret over people who seem to prosper through wrongdoing.",
+    "trading": "Don't get anxious watching others' big wins or chase moves you missed. Wait for your setup.",
+    "theme": "patience"
+  },
+  {
+    "ref": "Psalm 46:10",
+    "translation": "WEB",
+    "text": "“Be still, and know that I am God. I will be exalted among the nations. I will be exalted in the earth.”",
+    "meaning": "God calls for stillness and reminds us that he is God, exalted over all nations.",
+    "trading": "Stillness is a skill. Sometimes the best trade is none: pause, breathe, and reset before acting.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Psalm 23:1-4",
+    "translation": "WEB",
+    "text": "Yahweh is my shepherd: I shall lack nothing. He makes me lie down in green pastures. He leads me beside still waters. He restores my soul. He guides me in the paths of righteousness for his name’s sake. Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me. Your rod and your staff, they comfort me.",
+    "meaning": "The psalmist trusts God as a shepherd who provides, restores and stays with him even in the darkest valley.",
+    "trading": "Even through a rough drawdown you can stay calm and keep to your process instead of panicking.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Psalm 34:4",
+    "translation": "WEB",
+    "text": "I sought Yahweh, and he answered me, and delivered me from all my fears.",
+    "meaning": "The psalmist sought God and was delivered from all his fears.",
+    "trading": "Name the fear (losing the account, missing out) and deal with it before the session, so it doesn't make your trading decisions.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Psalm 127:2",
+    "translation": "WEB",
+    "text": "It is vain for you to rise up early, to stay up late, eating the bread of toil; for he gives sleep to his loved ones.",
+    "meaning": "Anxious, exhausting toil is in vain; God gives sleep to those he loves.",
+    "trading": "Rest is part of performance. Overworking screens and late-night sessions erode your judgment, so protect your sleep.",
+    "theme": "contentment"
+  },
+  {
+    "ref": "Isaiah 40:31",
+    "translation": "WEB",
+    "text": "But those who wait for Yahweh will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.",
+    "meaning": "Those who wait for God will renew their strength and not grow weary.",
+    "trading": "Trading is a long game. Patience and recovery keep you sharp; burnout and rushing do not.",
+    "theme": "hope"
+  },
+  {
+    "ref": "Isaiah 41:10",
+    "translation": "WEB",
+    "text": "Don’t you be afraid, for I am with you. Don’t be dismayed, for I am your God. I will strengthen you. Yes, I will help you. Yes, I will uphold you with the right hand of my righteousness.",
+    "meaning": "God tells his people not to fear or be dismayed because he is with them and will strengthen them.",
+    "trading": "Fear of loss makes traders hesitate or exit early. Size so you can trade calmly and execute the plan.",
+    "theme": "courage"
+  },
+  {
+    "ref": "Joshua 1:9",
+    "translation": "WEB",
+    "text": "Haven’t I commanded you? Be strong and courageous. Don’t be afraid. Don’t be dismayed, for Yahweh your God is with you wherever you go.”",
+    "meaning": "God commands Joshua to be strong and courageous, not afraid, because God is with him.",
+    "trading": "Courage in trading means taking valid setups and honouring your stops, not gambling.",
+    "theme": "courage"
+  },
+  {
+    "ref": "Philippians 4:6-7",
+    "translation": "WEB",
+    "text": "In nothing be anxious, but in everything, by prayer and petition with thanksgiving, let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your thoughts in Christ Jesus.",
+    "meaning": "Don't be anxious; bring requests to God with thanksgiving, and his peace will guard your hearts and minds.",
+    "trading": "Anxiety distorts decisions. Have a routine to settle down before the open and after a loss, such as breathing, a walk or a journal note.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Philippians 4:11-13",
+    "translation": "WEB",
+    "text": "Not that I speak because of lack, for I have learned in whatever state I am, to be content in it. I know how to be humbled, and I know also how to abound. In everything and in all things I have learned the secret both to be filled and to be hungry, both to abound and to be in need. I can do all things through Christ, who strengthens me.",
+    "meaning": "Paul says he has learned to be content in every circumstance, whether in need or in plenty, and is strengthened through Christ.",
+    "trading": "Learn to be steady in both wins and losses. A calm baseline stops greed after wins and tilt after losses.",
+    "theme": "contentment"
+  },
+  {
+    "ref": "Romans 5:3-5",
+    "translation": "WEB",
+    "text": "Not only this, but we also rejoice in our sufferings, knowing that suffering produces perseverance; and perseverance, proven character; and proven character, hope: and hope doesn’t disappoint us, because God’s love has been poured out into our hearts through the Holy Spirit who was given to us.",
+    "meaning": "Suffering produces perseverance, perseverance character, and character hope.",
+    "trading": "Losing streaks and tough evaluations build resilience when you learn from them. Treat drawdowns as training.",
+    "theme": "perseverance"
+  },
+  {
+    "ref": "Romans 8:28",
+    "translation": "WEB",
+    "text": "We know that all things work together for good for those who love God, to those who are called according to his purpose.",
+    "meaning": "Paul says that God works all things together for good for those who love him and are called by his purpose.",
+    "trading": "A stopped-out trade or failed eval isn't the end. Review it, learn, and use it to improve. It doesn't mean every outcome is easy or immediate.",
+    "theme": "hope"
+  },
+  {
+    "ref": "Romans 12:12",
+    "translation": "WEB",
+    "text": "rejoicing in hope; enduring in troubles; continuing steadfastly in prayer;",
+    "meaning": "Believers are urged to rejoice in hope, endure in trouble and keep praying.",
+    "trading": "Stay patient through hard stretches, keep showing up and keep to your routine when results lag.",
+    "theme": "patience"
+  },
+  {
+    "ref": "James 1:2-4",
+    "translation": "WEB",
+    "text": "Count it all joy, my brothers, when you fall into various temptations, knowing that the testing of your faith produces endurance. Let endurance have its perfect work, that you may be perfect and complete, lacking in nothing.",
+    "meaning": "Trials test faith and produce endurance, which leads to maturity.",
+    "trading": "Difficult periods in trading build the endurance that makes you consistent. Stay the course and refine your process.",
+    "theme": "perseverance"
+  },
+  {
+    "ref": "James 1:5",
+    "translation": "WEB",
+    "text": "But if any of you lacks wisdom, let him ask of God, who gives to all liberally and without reproach; and it will be given to him.",
+    "meaning": "Anyone lacking wisdom should ask God, who gives generously.",
+    "trading": "Admit what you don't know. Ask for feedback and study your mistakes rather than pretending you have it figured out.",
+    "theme": "humility"
+  },
+  {
+    "ref": "James 1:19-20",
+    "translation": "WEB",
+    "text": "So, then, my beloved brothers, let every man be swift to hear, slow to speak, and slow to anger; for the anger of man doesn’t produce the righteousness of God.",
+    "meaning": "Be quick to listen, slow to speak and slow to anger, because human anger doesn't produce God's righteousness.",
+    "trading": "Anger after a loss is a bad signal to trade on. Step away until you're calm before taking another entry.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Galatians 6:9",
+    "translation": "WEB",
+    "text": "Let us not be weary in doing good, for we will reap in due season, if we don’t give up.",
+    "meaning": "Don't grow weary of doing good; you will reap at the proper time if you don't give up.",
+    "trading": "Results come from repeated, disciplined execution. Keep following the plan even when a few weeks feel flat.",
+    "theme": "perseverance"
+  },
+  {
+    "ref": "1 Timothy 6:6-8",
+    "translation": "WEB",
+    "text": "But godliness with contentment is great gain. For we brought nothing into the world, and we certainly can’t carry anything out. But having food and clothing, we will be content with that.",
+    "meaning": "Godliness with contentment is great gain; we bring nothing into the world, so food and clothing should be enough.",
+    "trading": "Contentment guards against oversizing and chasing. Being grateful for a good, steady day helps you stop while ahead.",
+    "theme": "contentment"
+  },
+  {
+    "ref": "1 Timothy 6:9-10",
+    "translation": "WEB",
+    "text": "But those who are determined to be rich fall into a temptation and a snare and many foolish and harmful lusts, such as drown men in ruin and destruction. For the love of money is a root of all kinds of evil. Some have been led astray from the faith in their greed, and have pierced themselves through with many sorrows.",
+    "meaning": "Those set on getting rich fall into temptation and harmful desires; love of money is a root of all kinds of evil.",
+    "trading": "The urge to get rich quickly leads to over-leverage and rule-breaking. Focus on process and risk, not the payout.",
+    "theme": "greed"
+  },
+  {
+    "ref": "Hebrews 12:1",
+    "translation": "WEB",
+    "text": "Therefore let us also, seeing we are surrounded by so great a cloud of witnesses, lay aside every weight and the sin which so easily entangles us, and let us run with perseverance the race that is set before us,",
+    "meaning": "Believers are urged to shed weights and sin and run the race set before them with endurance.",
+    "trading": "Drop habits that slow you down, such as overtrading, moving stops and skipping the journal. Run your own long race.",
+    "theme": "perseverance"
+  },
+  {
+    "ref": "Hebrews 13:5",
+    "translation": "WEB",
+    "text": "Be free from the love of money, content with such things as you have, for he has said, “I will in no way leave you, neither will I in any way forsake you.”",
+    "meaning": "Keep free from the love of money and be content with what you have, since God promises never to leave you.",
+    "trading": "Constant hunger for more pushes traders to overreach. Being content with an on-plan day keeps you steady.",
+    "theme": "contentment"
+  },
+  {
+    "ref": "Matthew 6:25-26",
+    "translation": "WEB",
+    "text": "Therefore I tell you, don’t be anxious for your life: what you will eat, or what you will drink; nor yet for your body, what you will wear. Isn’t life more than food, and the body more than clothing? See the birds of the sky, that they don’t sow, neither do they reap, nor gather into barns. Your heavenly Father feeds them. Aren’t you of much more value than they?",
+    "meaning": "Jesus tells his listeners not to be anxious about food, drink or clothing, pointing to how God feeds the birds.",
+    "trading": "Worry about money and bills can wreck decisions. Trade with risk you can afford so pressure doesn't drive your entries.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Matthew 6:33-34",
+    "translation": "WEB",
+    "text": "But seek first God’s Kingdom, and his righteousness; and all these things will be given to you as well. Therefore don’t be anxious for tomorrow, for tomorrow will be anxious for itself. Each day’s own evil is sufficient.",
+    "meaning": "Jesus says to seek God's kingdom first and not to be anxious about tomorrow, since each day has its own troubles.",
+    "trading": "Focus on today's session and today's process instead of worrying about the month or the payout.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Matthew 7:24-27",
+    "translation": "WEB",
+    "text": "“Everyone therefore who hears these words of mine, and does them, I will liken him to a wise man, who built his house on a rock. The rain came down, the floods came, and the winds blew, and beat on that house; and it didn’t fall, for it was founded on the rock. Everyone who hears these words of mine, and doesn’t do them will be like a foolish man, who built his house on the sand. The rain came down, the floods came, and the winds blew, and beat on that house; and it fell—and great was its fall.”",
+    "meaning": "Jesus contrasts building a house on rock (hearing and doing his words) with building on sand, which collapses in the storm.",
+    "trading": "A tested plan with firm rules is your rock. Without it, one volatile session can collapse an account.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Luke 14:28",
+    "translation": "WEB",
+    "text": "For which of you, desiring to build a tower, doesn’t first sit down and count the cost, to see if he has enough to complete it?",
+    "meaning": "Jesus says a person building a tower first sits down and counts the cost to be sure they can finish.",
+    "trading": "Before every trade, count the cost: know your stop, your max loss and your daily limit.",
+    "theme": "planning"
+  },
+  {
+    "ref": "2 Timothy 1:7",
+    "translation": "WEB",
+    "text": "For God didn’t give us a spirit of fear, but of power, love, and self-control.",
+    "meaning": "God gave us a spirit not of fear but of power, love and self-control.",
+    "trading": "Trade from clear thinking rather than fear or impulse. Self-control is central to following your rules.",
+    "theme": "courage"
+  },
+  {
+    "ref": "1 Peter 5:6-7",
+    "translation": "WEB",
+    "text": "Humble yourselves therefore under the mighty hand of God, that he may exalt you in due time; casting all your worries on him, because he cares for you.",
+    "meaning": "Humble yourselves under God's hand, casting all your anxiety on him because he cares for you.",
+    "trading": "Accept that you can't control the market. Do your part, hand over the worry, and leave the outcome alone.",
+    "theme": "humility"
+  },
+  {
+    "ref": "Lamentations 3:22-23",
+    "translation": "WEB",
+    "text": "It is because of Yahweh’s loving kindnesses that we are not consumed, because his compassion doesn’t fail. They are new every morning. Great is your faithfulness.",
+    "meaning": "Even in grief, the writer affirms that God's mercies and faithfulness are new every morning.",
+    "trading": "Each session is a fresh start. Yesterday's loss doesn't need to affect today's decisions.",
+    "theme": "hope"
+  },
+  {
+    "ref": "Micah 7:8",
+    "translation": "WEB",
+    "text": "Don’t rejoice against me, my enemy. When I fall, I will arise. When I sit in darkness, Yahweh will be a light to me.",
+    "meaning": "The speaker says that though he has fallen and sits in darkness, he will rise, and God will be his light.",
+    "trading": "After a loss, get back up and go back to the plan. One bad day doesn't define your career.",
+    "theme": "hope"
+  },
+  {
+    "ref": "Colossians 3:23-24",
+    "translation": "WEB",
+    "text": "And whatever you do, work heartily, as for the Lord, and not for men, knowing that from the Lord you will receive the reward of the inheritance; for you serve the Lord Christ.",
+    "meaning": "Work wholeheartedly, as for the Lord and not for people, knowing he is the one who rewards.",
+    "trading": "Treat prep, journaling and review as your job. Do the unglamorous work well whether or not anyone sees it.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Proverbs 3:5-6",
+    "translation": "WEB",
+    "text": "Trust in Yahweh with all your heart, and don’t lean on your own understanding. In all your ways acknowledge him, and he will make your paths straight.",
+    "meaning": "Trust in God fully rather than leaning on your own understanding, and he will direct your paths.",
+    "trading": "Don't lean on overconfidence. Stay humble, use your rules and be willing to be wrong.",
+    "theme": "humility"
+  },
+  {
+    "ref": "Proverbs 4:23",
+    "translation": "WEB",
+    "text": "Keep your heart with all diligence, for out of it is the wellspring of life.",
+    "meaning": "Guard your heart with all diligence, because life flows from it.",
+    "trading": "Guard your mindset. Protect it from tilt, comparison and social-media noise before you trade.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Proverbs 10:4",
+    "translation": "WEB",
+    "text": "He becomes poor who works with a lazy hand, but the hand of the diligent brings wealth.",
+    "meaning": "Lazy hands bring poverty, but diligent hands bring wealth.",
+    "trading": "Consistent prep, review and practice separate steady traders from lucky ones.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Proverbs 20:21",
+    "translation": "WEB",
+    "text": "An inheritance quickly gained at the beginning, won’t be blessed in the end.",
+    "meaning": "An inheritance quickly gained at the beginning won't be blessed in the end.",
+    "trading": "Quick early wins, such as a hot start, can breed overconfidence. Stay disciplined with size.",
+    "theme": "greed"
+  },
+  {
+    "ref": "Proverbs 22:3",
+    "translation": "WEB",
+    "text": "A prudent man sees danger, and hides himself; but the simple pass on, and suffer for it.",
+    "meaning": "The prudent see danger and hide, while the simple keep going and suffer.",
+    "trading": "If you're near your daily loss limit or the market is erratic, step back rather than pressing on.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Proverbs 25:28",
+    "translation": "WEB",
+    "text": "Like a city that is broken down and without walls is a man whose spirit is without restraint.",
+    "meaning": "A person without self-control is like a city with broken-down walls.",
+    "trading": "Your rules (max daily loss, max trades) are your walls. Without them, one emotional trade can breach the account.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Proverbs 29:11",
+    "translation": "WEB",
+    "text": "A fool vents all of his anger, but a wise man brings himself under control.",
+    "meaning": "A fool gives full vent to anger, but a wise person keeps calm.",
+    "trading": "Vent away from the screen, not into the market. Calm after a loss protects the account.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Proverbs 16:18",
+    "translation": "WEB",
+    "text": "Pride goes before destruction, and a haughty spirit before a fall.",
+    "meaning": "Pride comes before destruction and a haughty spirit before a fall.",
+    "trading": "A big win can breed pride and oversizing. Stay humble and keep risk consistent.",
+    "theme": "humility"
+  },
+  {
+    "ref": "Proverbs 11:2",
+    "translation": "WEB",
+    "text": "When pride comes, then comes shame, but with humility comes wisdom.",
+    "meaning": "Pride leads to shame, but humility brings wisdom.",
+    "trading": "Admit mistakes quickly and learn from them. Humility helps you cut losers and improve.",
+    "theme": "humility"
+  },
+  {
+    "ref": "Proverbs 12:15",
+    "translation": "WEB",
+    "text": "The way of a fool is right in his own eyes, but he who is wise listens to counsel.",
+    "meaning": "A fool thinks his own way is right, but a wise person listens to advice.",
+    "trading": "Be open to feedback on your trades. Your journal or a mentor can catch what you miss.",
+    "theme": "humility"
+  },
+  {
+    "ref": "Proverbs 11:14",
+    "translation": "WEB",
+    "text": "Where there is no wise guidance, the nation falls, but in the multitude of counselors there is victory.",
+    "meaning": "Without wise guidance a nation falls, but with many counsellors there is safety or victory.",
+    "trading": "Don't trade in a vacuum. A mentor, journal review or trading group provides useful checks.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Proverbs 15:1",
+    "translation": "WEB",
+    "text": "A gentle answer turns away wrath, but a harsh word stirs up anger.",
+    "meaning": "A gentle answer turns away wrath, but a harsh word stirs up anger.",
+    "trading": "Speak to yourself gently after a loss. Harsh self-criticism fuels tilt, while a calm reset helps.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Proverbs 19:11",
+    "translation": "WEB",
+    "text": "The discretion of a man makes him slow to anger. It is his glory to overlook an offense.",
+    "meaning": "Good sense makes a person slow to anger, and it is to their credit to overlook an offense.",
+    "trading": "Let the market's 'offenses', like a stop-run or a missed move, go. Don't take them personally.",
+    "theme": "patience"
+  },
+  {
+    "ref": "Proverbs 14:15",
+    "translation": "WEB",
+    "text": "A simple man believes everything, but the prudent man carefully considers his ways.",
+    "meaning": "The simple believe anything, but the prudent give thought to their steps.",
+    "trading": "Verify before you act. Don't chase tips or hype; check the setup against your plan.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Proverbs 14:23",
+    "translation": "WEB",
+    "text": "In all hard work there is profit, but the talk of the lips leads only to poverty.",
+    "meaning": "All hard work brings profit, but mere talk leads to poverty.",
+    "trading": "Prep and review beat talking about trading. Put in the work every day.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Proverbs 28:25",
+    "translation": "WEB",
+    "text": "One who is greedy stirs up strife; but one who trusts in Yahweh will prosper.",
+    "meaning": "A greedy person stirs up conflict, but one who trusts in the Lord prospers.",
+    "trading": "Greed for more creates chaos in your trading. Trusting your process brings steadier results.",
+    "theme": "greed"
+  },
+  {
+    "ref": "Proverbs 23:4-5",
+    "translation": "WEB",
+    "text": "Don’t weary yourself to be rich. In your wisdom, show restraint. Why do you set your eyes on that which is not? For it certainly sprouts wings like an eagle and flies in the sky.",
+    "meaning": "Don't wear yourself out to get rich; wealth can vanish as quickly as it comes.",
+    "trading": "Grinding out overtrades to hit a number is a losing pace. Profits can vanish fast, so protect what you have.",
+    "theme": "greed"
+  },
+  {
+    "ref": "Proverbs 20:23",
+    "translation": "WEB",
+    "text": "Yahweh detests differing weights, and dishonest scales are not pleasing.",
+    "meaning": "God detests differing weights and dishonest scales.",
+    "trading": "Be consistent: apply the same risk rules to every trade instead of bending them when convenient.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Proverbs 16:11",
+    "translation": "WEB",
+    "text": "Honest balances and scales are Yahweh’s; all the weights in the bag are his work.",
+    "meaning": "Honest balances and scales belong to God, and all the weights in the bag are his concern.",
+    "trading": "Honest record-keeping and fair rules keep you accountable. Track every trade truthfully.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Psalm 30:5",
+    "translation": "WEB",
+    "text": "For his anger is but for a moment. His favor is for a lifetime. Weeping may stay for the night, but joy comes in the morning.",
+    "meaning": "God's anger lasts a moment, his favour a lifetime; weeping may last the night, but joy comes in the morning.",
+    "trading": "A bad day doesn't last forever. Close the platform, rest, and come back fresh.",
+    "theme": "hope"
+  },
+  {
+    "ref": "Psalm 56:3-4",
+    "translation": "WEB",
+    "text": "When I am afraid, I will put my trust in you. In God, I praise his word. In God, I put my trust. I will not be afraid. What can flesh do to me?",
+    "meaning": "The psalmist admits fear but chooses to trust God, so he isn't afraid of what mere people can do.",
+    "trading": "Feeling fear is normal. Acknowledge it, then act on your plan with size you can handle.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Psalm 27:14",
+    "translation": "WEB",
+    "text": "Wait for Yahweh. Be strong, and let your heart take courage. Yes, wait for Yahweh.",
+    "meaning": "Wait for the Lord; be strong and take heart.",
+    "trading": "Waiting for your setup takes strength. Patience is often the hardest position to hold.",
+    "theme": "patience"
+  },
+  {
+    "ref": "Psalm 62:1-2",
+    "translation": "WEB",
+    "text": "My soul rests in God alone. My salvation is from him. He alone is my rock and my salvation, my fortress— I will never be greatly shaken.",
+    "meaning": "The psalmist's soul finds rest in God alone, who is his rock and fortress, so he won't be greatly shaken.",
+    "trading": "Build a stable base (rules, routine, rest) so a single loss doesn't shake you.",
+    "theme": "contentment"
+  },
+  {
+    "ref": "Psalm 55:22",
+    "translation": "WEB",
+    "text": "Cast your burden on Yahweh, and he will sustain you. He will never allow the righteous to be moved.",
+    "meaning": "Cast your burden on the Lord, and he will sustain you.",
+    "trading": "Don't carry every loss around. Journal it, let it go, and reset for the next session.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Isaiah 26:3",
+    "translation": "WEB",
+    "text": "You will keep whoever’s mind is steadfast in perfect peace, because he trusts in you.",
+    "meaning": "God keeps in perfect peace those whose minds are steadfast because they trust in him.",
+    "trading": "A steady mind gives clearer decisions. A routine and a fixed plan help you stay calm.",
+    "theme": "fear"
+  },
+  {
+    "ref": "Romans 12:19",
+    "translation": "WEB",
+    "text": "Don’t seek revenge yourselves, beloved, but give place to God’s wrath. For it is written, “Vengeance belongs to me; I will repay, says the Lord.”",
+    "meaning": "Don't take revenge; leave room for God's justice.",
+    "trading": "The market owes you nothing. Trying to win back a loss immediately is how small losses turn into big ones.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Romans 12:17-18",
+    "translation": "WEB",
+    "text": "Repay no one evil for evil. Respect what is honorable in the sight of all men. If it is possible, as much as it is up to you, be at peace with all men.",
+    "meaning": "Paul says not to repay evil for evil and, as far as possible, to live at peace with everyone.",
+    "trading": "Don't try to 'pay the market back' for a loss. Let it go and wait for the next valid setup.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Ecclesiastes 7:8",
+    "translation": "WEB",
+    "text": "Better is the end of a thing than its beginning. The patient in spirit is better than the proud in spirit.",
+    "meaning": "The end of a matter is better than its beginning, and patience is better than pride.",
+    "trading": "Judge a trade by its plan and result, not its first minutes. Be patient and let it play out to your stop or target.",
+    "theme": "patience"
+  },
+  {
+    "ref": "Ecclesiastes 9:10",
+    "translation": "WEB",
+    "text": "Whatever your hand finds to do, do it with your might; for there is no work, nor plan, nor knowledge, nor wisdom, in Sheol, where you are going.",
+    "meaning": "Whatever your hand finds to do, do it with all your might, since there's no work in the grave.",
+    "trading": "Give real effort to your practice and review while you have the chance. Don't coast.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Deuteronomy 31:6",
+    "translation": "WEB",
+    "text": "Be strong and courageous. Don’t be afraid or scared of them; for Yahweh your God himself is who goes with you. He will not fail you nor forsake you.”",
+    "meaning": "Moses tells Israel to be strong and courageous because God goes with them and will not forsake them.",
+    "trading": "Be bold enough to take valid setups and cut losers on time. Confidence comes from preparation.",
+    "theme": "courage"
+  },
+  {
+    "ref": "2 Corinthians 4:8-9",
+    "translation": "WEB",
+    "text": "We are pressed on every side, yet not crushed; perplexed, yet not to despair; pursued, yet not forsaken; struck down, yet not destroyed;",
+    "meaning": "Paul says believers are hard pressed but not crushed, perplexed but not in despair, struck down but not destroyed.",
+    "trading": "You can be knocked down by losses without being done. Stay resilient and keep your capital intact.",
+    "theme": "perseverance"
+  },
+  {
+    "ref": "Galatians 5:22-23",
+    "translation": "WEB",
+    "text": "But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faith, gentleness, and self-control. Against such things there is no law.",
+    "meaning": "Paul lists the fruit of the Spirit: love, joy, peace, patience, kindness, goodness, faithfulness, gentleness and self-control.",
+    "trading": "Patience and self-control are the traits that matter most when a trade goes wrong. Build them deliberately.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Luke 16:10",
+    "translation": "WEB",
+    "text": "He who is faithful in a very little is faithful also in much. He who is dishonest in a very little is also dishonest in much.",
+    "meaning": "Jesus says that whoever is faithful in small matters is faithful in large ones, and dishonest in small is dishonest in large.",
+    "trading": "How you handle small rules (stop placement, journaling) predicts how you handle big risk. Be faithful in the small things.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Psalm 90:12",
+    "translation": "WEB",
+    "text": "So teach us to count our days, that we may gain a heart of wisdom.",
+    "meaning": "Moses prays for God to teach us to number our days and gain a wise heart.",
+    "trading": "Time and capital are limited. Use them deliberately on your best setups.",
+    "theme": "planning"
+  },
+  {
+    "ref": "Proverbs 21:17",
+    "translation": "WEB",
+    "text": "He who loves pleasure shall be a poor man. He who loves wine and oil shall not be rich.",
+    "meaning": "The one who loves pleasure will become poor, and the one who loves wine and oil will not be rich.",
+    "trading": "Chasing thrills leads to overtrading. Trade for edge, not excitement.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Proverbs 6:6-8",
+    "translation": "WEB",
+    "text": "Go to the ant, you sluggard. Consider her ways, and be wise; which having no chief, overseer, or ruler, provides her bread in the summer, and gathers her food in the harvest.",
+    "meaning": "The sluggard is told to learn from the ant, which prepares and stores food without a boss.",
+    "trading": "Do the prep work daily without being told. Consistent preparation is what pays off.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Proverbs 13:4",
+    "translation": "WEB",
+    "text": "The soul of the sluggard desires, and has nothing, but the desire of the diligent shall be fully satisfied.",
+    "meaning": "The lazy person craves and gets nothing, but the diligent are fully satisfied.",
+    "trading": "Wishing for profits doesn't produce them. Show up, prepare, review.",
+    "theme": "discipline"
+  },
+  {
+    "ref": "Ephesians 4:26-27",
+    "translation": "WEB",
+    "text": "“Be angry, and don’t sin.” Don’t let the sun go down on your wrath, and don’t give place to the devil.",
+    "meaning": "Paul says anger itself isn't the sin, but don't let it lead you into sin, and don't let the sun set on your anger.",
+    "trading": "Feel the frustration, but don't act on it. End the day with a clean slate rather than carrying anger into tomorrow's trading.",
+    "theme": "self-control"
+  },
+  {
+    "ref": "Hebrews 10:36",
+    "translation": "WEB",
+    "text": "For you need endurance so that, having done the will of God, you may receive the promise.",
+    "meaning": "Believers need endurance to do God's will and receive what is promised.",
+    "trading": "Success in trading takes endurance through slow stretches. Keep executing your plan.",
+    "theme": "perseverance"
+  },
+  {
+    "ref": "Psalm 121:1-2",
+    "translation": "WEB",
+    "text": "I will lift up my eyes to the hills. Where does my help come from? My help comes from Yahweh, who made heaven and earth.",
+    "meaning": "The psalmist looks up and says his help comes from the Lord, maker of heaven and earth.",
+    "trading": "When things feel overwhelming, zoom out and remember the bigger picture. One session isn't your whole future.",
+    "theme": "hope"
+  },
+  {
+    "ref": "Micah 6:8",
+    "translation": "WEB",
+    "text": "He has shown you, O man, what is good. What does Yahweh require of you, but to act justly, to love mercy, and to walk humbly with your God?",
+    "meaning": "God has shown what is good: act justly, love mercy and walk humbly with him.",
+    "trading": "Trade honestly and humbly: follow your rules, own your mistakes and don't chase ego.",
+    "theme": "humility"
+  }
+]

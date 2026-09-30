@@ -9,7 +9,7 @@ import { fmtMoney, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
 import { BREAK_DESCRIPTIONS, BREAK_LABELS } from '@/lib/defaults';
 import { formatTime } from '@/lib/time';
 
-export const metadata = { title: 'System — Trade Journal' };
+export const metadata = { title: 'System — Super-Journal' };
 
 export default async function SystemPage() {
   const scope = await getScope();

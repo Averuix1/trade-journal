@@ -3,7 +3,7 @@ import { AccountForm } from '@/components/account-form';
 import { getSessionDefs, getSettings } from '@/lib/queries';
 import { todayKey } from '@/lib/time';
 
-export const metadata = { title: 'New account — Trade Journal' };
+export const metadata = { title: 'New account — Super-Journal' };
 
 export default async function NewAccountPage() {
   const [sessions, config] = await Promise.all([getSessionDefs(), getSettings()]);
