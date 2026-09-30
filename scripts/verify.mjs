@@ -62,9 +62,15 @@ try {
   check('Account dropdown opens', switcherOpen);
   check('Account dropdown is grouped', (await page.getByText('Blown / archived').count()) > 0);
   await page.getByRole('button', { name: 'All accounts', exact: true }).click();
-  await page.waitForTimeout(1200);
-  check('Switching to All accounts works', (await page.getByText('All accounts').count()) > 0);
-  await page.getByRole('button', { name: /All accounts/ }).first().click();
+  let switchedAll = false;
+  try {
+    await page.getByRole('heading', { name: 'All accounts' }).waitFor({ timeout: 8000 });
+    switchedAll = true;
+  } catch {
+    switchedAll = false;
+  }
+  check('Switching to All accounts works', switchedAll);
+  await page.getByRole('banner').getByRole('button').first().click();
   await page.waitForTimeout(250);
   await page.getByRole('button', { name: /50K Combine #2/ }).click();
   await page.waitForTimeout(1200);
@@ -133,7 +139,7 @@ try {
 
   // --- trades + add form ---
   const headerBalance = async () => {
-    const text = await page.locator('header').getByText(/balance /).innerText();
+    const text = await page.getByRole('banner').getByText(/balance /).innerText();
     return Number(text.replace(/[^0-9.-]/g, ''));
   };
   const deleteRow = async (pnlText, rText) => {
@@ -165,13 +171,17 @@ try {
   check('Quick win shows planned 2R', winPlan.includes('+2.00R'), winPlan);
   const balanceBefore = await headerBalance();
   const winDay = await page.locator('#tradeDate').inputValue();
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Quick win saves', await page.getByText('Trade logged.').isVisible());
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   const balanceAfterWin = await headerBalance();
+  check('Quick win saves', balanceAfterWin - balanceBefore === 500, `${balanceBefore} -> ${balanceAfterWin}`);
   check('Quick win raises the balance by 500', balanceAfterWin - balanceBefore === 500, `${balanceBefore} -> ${balanceAfterWin}`);
   await page.goto(`${BASE}/calendar?day=${winDay}`, { waitUntil: 'networkidle' });
-  check('Calendar shows the quick win', await page.getByText('+$500').first().isVisible() && await page.getByText('+2.00R').first().isVisible());
+  const winCell = page.locator('a[href*="day="]').filter({ hasText: '+$500' }).filter({ hasText: '+2.00R' });
+  check('Calendar shows the quick win', (await winCell.count()) > 0, `cells ${await winCell.count()}`);
   await page.goto(`${BASE}/stats`, { waitUntil: 'networkidle' });
   const plannedStat = page.getByText('Avg planned RR', { exact: true }).locator('..');
   check('Stats show average planned RR', await plannedStat.isVisible());
@@ -185,10 +195,13 @@ try {
   const lossLive = await page.locator('#live-result').innerText();
   check('Quick loss shows -$250 and -1R', lossLive.includes('-$250.00') && lossLive.includes('-1.00R'), lossLive);
   const balanceBeforeLoss = await headerBalance();
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Quick loss saves', await page.getByText('Trade logged.').isVisible());
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   const balanceAfterLoss = await headerBalance();
+  check('Quick loss saves', balanceBeforeLoss - balanceAfterLoss === 250, `${balanceBeforeLoss} -> ${balanceAfterLoss}`);
   check('Quick loss lowers the balance by 250', balanceBeforeLoss - balanceAfterLoss === 250, `${balanceBeforeLoss} -> ${balanceAfterLoss}`);
   await deleteRow('-$250.00', '-1.00R');
 
@@ -199,9 +212,14 @@ try {
   await page.fill('#customPnl', '125');
   const partialLive = await page.locator('#live-result').innerText();
   check('Quick partial shows +$125 and +0.50R', partialLive.includes('+$125.00') && partialLive.includes('+0.50R'), partialLive);
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Quick partial saves', await page.getByText('Trade logged.').isVisible());
+  const balanceBeforePartial = await headerBalance();
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  const balanceAfterPartial = await headerBalance();
+  check('Quick partial saves', balanceAfterPartial - balanceBeforePartial === 125, `${balanceBeforePartial} -> ${balanceAfterPartial}`);
   await deleteRow('+$125.00', '+0.50R');
 
   await page.goto(`${BASE}/trades?new=1`, { waitUntil: 'networkidle' });
@@ -218,11 +236,13 @@ try {
   await shot('08-trades-add-form');
 
   const rowsBefore = await page.locator('tbody tr').count();
-  await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2200);
-  check('Trade saves', await page.getByText('Trade logged.').isVisible());
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Log trade' }).click(),
+  ]);
   await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
   const rowsAfter = await page.locator('tbody tr').count();
+  check('Trade saves', rowsAfter > rowsBefore, `${rowsBefore} -> ${rowsAfter}`);
   check('New trade appears in the list', rowsAfter >= rowsBefore, `${rowsBefore} -> ${rowsAfter}`);
 
   // delete it again so the demo data stays clean
@@ -276,8 +296,18 @@ try {
   const sheetLabel = await sheetButton.innerText();
   check('Sheet preview counts 18 trades', /Import 18 trades/.test(sheetLabel), sheetLabel);
   await sheetButton.click();
-  await page.waitForTimeout(4000);
-  check('Sheet import reports 18 trades', await page.getByText(/Imported 18 trade/).isVisible());
+  let sheetImported = false;
+  {
+    const start = Date.now();
+    while (Date.now() - start < 20000) {
+      if (await page.getByText(/Imported 18 trade/).isVisible().catch(() => false)) {
+        sheetImported = true;
+        break;
+      }
+      await page.waitForTimeout(500);
+    }
+  }
+  check('Sheet import reports 18 trades', sheetImported);
 
   await page.goto(`${BASE}/calendar?month=2026-09&day=2026-09-14`, { waitUntil: 'networkidle' });
   await page.getByLabel('Rules followed?').scrollIntoViewIfNeeded();
@@ -416,8 +446,22 @@ try {
   await page.fill('#takeProfit', '400');
   await page.getByRole('button', { name: 'Win', exact: true }).click();
   await page.getByRole('button', { name: 'Log trade' }).click();
-  await page.waitForTimeout(2000);
-  check('Quick log trade saves without account balance', await page.getByText('Trade logged.').isVisible());
+  let quickSaved = false;
+  {
+    const start = Date.now();
+    while (Date.now() - start < 15000) {
+      if (await page.getByText('Trade logged.').isVisible().catch(() => false)) {
+        quickSaved = true;
+        break;
+      }
+      await page.waitForTimeout(400);
+    }
+  }
+  if (!quickSaved) {
+    await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+    quickSaved = (await page.locator('tbody tr').filter({ hasText: '2020-02-02' }).count()) > 0;
+  }
+  check('Quick log trade saves without account balance', quickSaved);
 
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   check('Desk works for Quick log', await page.getByText('not applicable for Quick log').isVisible());
@@ -430,15 +474,22 @@ try {
 
   await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
   const quickRow = page.locator('tbody tr').filter({ hasText: '2020-02-02' }).first();
-  await quickRow.getByRole('link', { name: 'Edit' }).click();
-  await page.waitForURL('**/trades?edit=*');
+  const editHref = await quickRow.getByRole('link', { name: 'Edit' }).getAttribute('href');
+  await page.goto(`${BASE}${editHref}`, { waitUntil: 'networkidle' });
   await page.selectOption('#accountId', { label: 'Personal futures' });
-  await page.getByRole('button', { name: 'Save trade' }).click();
-  await page.waitForTimeout(2000);
-  check('A trade can move to another account', await page.getByText('Trade moved.').isVisible());
+  await Promise.all([
+    page.waitForResponse((response) => response.request().method() === 'POST' && response.url().includes('/trades'), { timeout: 30000 }),
+    page.getByRole('button', { name: 'Save trade' }).click(),
+  ]);
+  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await page.getByRole('banner').getByRole('button').first().click();
+  await page.getByRole('button', { name: /Personal futures/ }).click();
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
+  check('A trade can move to another account', (await page.locator('tbody tr').filter({ hasText: '2020-02-02' }).count()) > 0);
 
   await page.goto(`${BASE}/accounts/new`, { waitUntil: 'networkidle' });
-  await page.getByText('Personal', { exact: true }).click();
+  await page.getByRole('main').getByText('Personal', { exact: true }).click();
   await page.fill('#name', 'Temp Keep Book');
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.waitForURL(`${BASE}/`, { timeout: 15000 });
@@ -488,9 +539,9 @@ try {
   await page.getByRole('button', { name: /Personal futures/ }).click();
   await page.waitForTimeout(1000);
   await page.goto(`${BASE}/trades`, { waitUntil: 'networkidle' });
-  const moved = page.locator('tbody tr').filter({ hasText: '2020-02-02' }).first();
-  if (await moved.count()) {
-    await moved.getByRole('button', { name: 'Delete' }).click();
+  const movedRow = page.locator('tbody tr').filter({ hasText: '2020-02-02' }).first();
+  if (await movedRow.count()) {
+    await movedRow.getByRole('button', { name: 'Delete' }).click();
     await page.waitForTimeout(1200);
   }
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });

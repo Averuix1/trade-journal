@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useActionState } from 'react';
 import { saveBookmark } from '@/lib/actions/bible';
 import type { FormState } from '@/lib/actions/shared';
@@ -19,16 +18,16 @@ function ChapterNav({ prev, next }: { prev: ChapterNeighbor; next: ChapterNeighb
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
       {prev ? (
-        <Link href={chapterHref(prev)} className="btn btn-ghost">
+        <a href={chapterHref(prev)} className="btn btn-ghost">
           Previous · {prev.name} {prev.chapter}
-        </Link>
+        </a>
       ) : (
         <span />
       )}
       {next ? (
-        <Link href={chapterHref(next)} className="btn btn-ghost">
+        <a href={chapterHref(next)} className="btn btn-ghost">
           Next · {next.name} {next.chapter}
-        </Link>
+        </a>
       ) : (
         <span />
       )}
