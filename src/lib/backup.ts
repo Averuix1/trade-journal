@@ -2,6 +2,8 @@ import 'server-only';
 import { db } from '@/lib/db';
 import {
   accounts,
+  bibleBookmarks,
+  bibleState,
   dayJournals,
   instruments,
   ledgerEntries,
@@ -25,6 +27,8 @@ export async function buildBackup() {
     sessionRows,
     tagRows,
     settingsRows,
+    bibleStateRows,
+    bibleBookmarkRows,
   ] = await Promise.all([
     db.select().from(accounts),
     db.select().from(trades),
@@ -36,10 +40,12 @@ export async function buildBackup() {
     db.select().from(sessionDefs),
     db.select().from(mistakeTags),
     db.select().from(settings),
+    db.select().from(bibleState),
+    db.select().from(bibleBookmarks),
   ]);
 
   return {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     accounts: accountRows,
     trades: tradeRows,
@@ -51,5 +57,7 @@ export async function buildBackup() {
     sessions: sessionRows,
     mistakeTags: tagRows,
     settings: settingsRows,
+    bibleState: bibleStateRows,
+    bibleBookmarks: bibleBookmarkRows,
   };
 }

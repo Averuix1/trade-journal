@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { Card } from '@/components/ui';
 import { AccountForm } from '@/components/account-form';
-import { deleteAccount, resetAccount } from '@/lib/actions/accounts';
+import { DeleteAccountPanel } from '@/components/delete-account-panel';
+import { resetAccount } from '@/lib/actions/accounts';
 import { getAccount, getSessionDefs, getSettings } from '@/lib/queries';
 import { todayKey } from '@/lib/time';
 
@@ -12,6 +13,22 @@ export default async function EditAccountPage({ params }: { params: Promise<{ id
   const [account, sessions, config] = await Promise.all([getAccount(Number(id)), getSessionDefs(), getSettings()]);
   if (!account) notFound();
   const today = todayKey(config.timezone);
+
+  if (account.isQuickLog) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-5">
+        <h1 className="text-lg font-semibold tracking-tight text-fg-strong">Quick log</h1>
+        <Card title="Built-in trade space">
+          <p className="text-sm text-dim">
+            Quick log holds trades that are not tied to a prop or personal account. It needs only the date, instrument,
+            direction, risk and result. Balance, drawdown, fees and prop rules do not apply. It cannot be deleted,
+            archived or marked blown. Trades you keep when deleting another account land here, labelled with that
+            account’s name.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-5">
@@ -52,16 +69,7 @@ export default async function EditAccountPage({ params }: { params: Promise<{ id
       )}
 
       <Card title="Danger zone">
-        <form action={deleteAccount} className="flex flex-wrap items-center gap-3">
-          <input type="hidden" name="id" value={account.id} />
-          <p className="flex-1 text-sm text-dim">
-            Deleting removes this account and every trade, note, screenshot and money entry on it. Archiving is almost
-            always what you want instead.
-          </p>
-          <button className="btn btn-danger" type="submit">
-            Delete account and all its data
-          </button>
-        </form>
+        <DeleteAccountPanel id={account.id} name={account.name} />
       </Card>
     </div>
   );

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Badge, Card, Empty, MoneyText, Stat, StatGrid } from '@/components/ui';
 import { NoAccounts } from '@/components/no-accounts';
+import { TradeBulkForm } from '@/components/trade-bulk-form';
 import { TradeForm } from '@/components/trade-form';
 import { deleteTrade, toggleTradeHidden } from '@/lib/actions/trades';
 import {
@@ -187,11 +188,14 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
             action={{ href: '/trades?new=1', label: 'Log a trade' }}
           />
         ) : (
+          <>
+          <TradeBulkForm accounts={scope.accounts.map((account) => ({ id: account.id, name: account.name }))} />
           <div className="scroll-x">
             <table className="tabular">
               <thead>
                 <tr>
-                  <th className="py-1.5">Date</th>
+                  <th className="py-1.5" />
+                  <th>Date</th>
                   <th>Time</th>
                   <th>Account</th>
                   <th>Session</th>
@@ -212,9 +216,15 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
               <tbody className="divide-rows">
                 {trades.map((t) => (
                   <tr key={t.id} className={isHidden(t) ? 'opacity-45' : ''}>
-                    <td className="py-1.5 whitespace-nowrap">{t.tradeDate}</td>
+                    <td className="py-1.5">
+                      <input form="trade-bulk-move" type="checkbox" name="ids" value={t.id} aria-label={`Select trade ${t.id}`} />
+                    </td>
+                    <td className="whitespace-nowrap">{t.tradeDate}</td>
                     <td className="whitespace-nowrap text-dim">{formatTime(t.openedAt, config.timezone)}</td>
-                    <td className="max-w-[9rem] truncate text-dim">{scope.accounts.find((a) => a.id === t.accountId)?.name}</td>
+                    <td className="max-w-[9rem] truncate text-dim">
+                      <div>{scope.accounts.find((a) => a.id === t.accountId)?.name}</div>
+                      {t.formerAccount && <div className="text-[10px]">from {t.formerAccount}</div>}
+                    </td>
                     <td className="text-dim">{sessions.find((s) => s.key === t.sessionKey)?.shortName ?? '—'}</td>
                     <td>{t.slot ?? '—'}</td>
                     <td>{t.symbol}</td>
@@ -263,6 +273,7 @@ export default async function TradesPage({ searchParams }: { searchParams: Searc
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Card>
     </div>

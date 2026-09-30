@@ -10,6 +10,7 @@ const PRIMARY = [
   { href: '/calendar', label: 'Calendar' },
   { href: '/stats', label: 'Stats' },
   { href: '/tank', label: 'Tank' },
+  { href: '/bible', label: 'Bible' },
 ];
 
 const MORE = [

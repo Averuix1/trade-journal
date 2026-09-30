@@ -12,6 +12,16 @@ export const metadata = { title: 'Money — Trade Journal' };
 export default async function MoneyPage() {
   const scope = await getScope();
   if (!scope.accounts.length) return <NoAccounts />;
+  if (scope.account?.isQuickLog) {
+    return (
+      <Card title="Money">
+        <p className="text-sm text-dim">
+          Not applicable for Quick log. Fees, payouts and an account balance belong on a prop or personal account.
+          Quick log only keeps the trades.
+        </p>
+      </Card>
+    );
+  }
 
   const accountIds = scope.accounts.map((a) => a.id);
   const [config, money, allLedger, trades] = await Promise.all([
@@ -109,6 +119,26 @@ export default async function MoneyPage() {
             <tbody className="divide-rows">
               {scope.accounts.map((a) => {
                 const m = money.get(a.id)!;
+                if (a.isQuickLog) {
+                  return (
+                    <tr key={a.id}>
+                      <td className="py-1.5 text-fg">{a.name}</td>
+                      <td>
+                        <Badge>Quick log</Badge>
+                      </td>
+                      <td className="text-right text-dim">—</td>
+                      <td className="text-right">
+                        <MoneyText value={m.netPnl} />
+                      </td>
+                      <td className="text-right text-dim">—</td>
+                      <td className="text-right text-dim">—</td>
+                      <td className="text-right text-dim">—</td>
+                      <td className="text-right text-dim">—</td>
+                      <td className="text-right text-dim">—</td>
+                      <td className="text-right text-dim">—</td>
+                    </tr>
+                  );
+                }
                 return (
                   <tr key={a.id}>
                     <td className="py-1.5 text-fg">{a.name}</td>
@@ -141,13 +171,19 @@ export default async function MoneyPage() {
         </div>
       </Card>
 
+      {scope.accounts.some((account) => !account.isQuickLog) && (
       <Card title="Add a money entry">
-        <LedgerForm accounts={scope.accounts} defaultAccountId={scope.account?.id ?? scope.accounts[0].id} today={today} />
+        <LedgerForm
+          accounts={scope.accounts.filter((account) => !account.isQuickLog)}
+          defaultAccountId={scope.account?.id ?? scope.accounts.find((account) => !account.isQuickLog)!.id}
+          today={today}
+        />
         <p className="mt-3 text-[11px] text-dim">
           Fees, resets, activations and data charges come out. Payouts, deposits go in. Withdrawals leave a personal
           account.
         </p>
       </Card>
+      )}
 
       <Card title={scope.account ? `Ledger · ${scope.account.name}` : 'Ledger · all accounts'}>
         {ledger.length === 0 ? (

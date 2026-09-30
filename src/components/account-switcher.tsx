@@ -8,6 +8,7 @@ import { selectAccount } from '@/lib/actions/accounts';
 type Group = { label: string; accounts: Account[] };
 
 function stageLabel(account: Account) {
+  if (account.isQuickLog) return 'Quick log';
   if (account.type === 'PERSONAL') return 'Personal';
   const stage = account.stage === 'FUNDED' ? 'Funded' : account.stage === 'BLOWN' ? 'Blown' : 'Eval';
   return `${account.firm ?? 'Prop'} · ${stage}`;

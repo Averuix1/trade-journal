@@ -116,7 +116,7 @@ export function TradeForm({
 
   const riskNumber = plannedRisk.trim() === '' ? null : Number(plannedRisk);
   const tpNumber = takeProfit.trim() === '' ? null : Number(takeProfit);
-  const feeNumber = quickFees.trim() === '' ? 0 : Number(quickFees) || 0;
+  const feeNumber = selectedAccount?.isQuickLog || quickFees.trim() === '' ? 0 : Number(quickFees) || 0;
   const customNumber = customPnl.trim() === '' ? null : Number(customPnl);
   const quickResult = quickPnl(outcome, riskNumber, tpNumber, customNumber, feeNumber);
   const planned = plannedRewardRisk(tpNumber, riskNumber);
@@ -181,6 +181,16 @@ export function TradeForm({
               </option>
             ))}
           </select>
+          {selectedAccount?.isQuickLog && (
+            <p className="mt-1 text-[11px] text-dim">Date, instrument, direction, risk and result. No balance or fees.</p>
+          )}
+          {trade && (
+            <p className="mt-1 text-[11px] text-dim">
+              Changing the account moves this trade and its chart screenshots. The day’s journal and day screenshots stay
+              on the original account.
+            </p>
+          )}
+          {trade?.formerAccount && <p className="mt-1 text-[11px] text-dim">From {trade.formerAccount}</p>}
         </div>
         <div>
           <label className="label" htmlFor="symbol">
@@ -348,17 +358,22 @@ export function TradeForm({
               <label className="label" htmlFor="quickFees">
                 Fees
               </label>
-              <input
-                id="quickFees"
-                name="fees"
-                type="number"
-                step="0.01"
-                min="0"
-                value={quickFees}
-                onChange={(e) => setQuickFees(e.target.value)}
-                placeholder="Optional"
-                className="field"
-              />
+              {selectedAccount?.isQuickLog ? (
+                <input type="hidden" name="fees" value="0" />
+              ) : (
+                <input
+                  id="quickFees"
+                  name="fees"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={quickFees}
+                  onChange={(e) => setQuickFees(e.target.value)}
+                  placeholder="Optional"
+                  className="field"
+                />
+              )}
+              {selectedAccount?.isQuickLog && <p className="text-sm text-dim">Not used on Quick log.</p>}
             </div>
             <div>
               <span className="label">Result</span>

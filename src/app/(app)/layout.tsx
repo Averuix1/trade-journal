@@ -31,6 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       : Promise.resolve([]),
   ]);
 
+  const quickLog = Boolean(scope.account?.isQuickLog);
   const balance = scope.account
     ? (money.get(scope.account.id)?.balance ?? 0)
     : [...money.values()].reduce((sum, m) => sum + m.balance, 0);
@@ -57,7 +58,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
           )}
           {scope.account && (
-            <span className="pill">{scope.account.type === 'PROP' ? (scope.account.firm ?? 'Prop') : 'Personal'}</span>
+            <span className="pill">
+              {quickLog ? 'Quick log' : scope.account.type === 'PROP' ? (scope.account.firm ?? 'Prop') : 'Personal'}
+            </span>
           )}
           <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-dim">
             {hiddenDays > 0 && (
@@ -65,7 +68,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 hiding {hiddenDays} day{hiddenDays === 1 ? '' : 's'}
               </Link>
             )}
-            {scope.accounts.length > 0 && <span className="tabular">balance {fmtMoney(balance)}</span>}
+            {scope.accounts.length > 0 && !quickLog && <span className="tabular">balance {fmtMoney(balance)}</span>}
             {scope.accounts.length > 0 && counters.length > 0 && (
               <span className="tabular hidden sm:inline">{counters.join(' · ')}</span>
             )}
