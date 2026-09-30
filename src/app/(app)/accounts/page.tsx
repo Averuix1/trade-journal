@@ -4,7 +4,7 @@ import { setAccountStage, setAccountStatus } from '@/lib/actions/accounts';
 import { getAccountMoney, getAccounts, groupAccounts } from '@/lib/queries';
 import { fmtMoney } from '@/lib/format';
 
-export const metadata = { title: 'Accounts — Trade Journal' };
+export const metadata = { title: 'Accounts — Super-Journal' };
 
 export default async function AccountsPage() {
   const accounts = await getAccounts();

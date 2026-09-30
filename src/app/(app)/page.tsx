@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MatrixField } from '@/components/matrix-field';
 import { Badge, Card, KeyValue, MoneyText, ProgressBar, Stat, StatGrid } from '@/components/ui';
 import { LineChart } from '@/components/charts';
 import { MiniCalendar } from '@/components/mini-calendar';
@@ -19,7 +20,7 @@ import { fmtMoney, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
 import { formatDayLong, formatTime, minutesToClock, startOfWeek, todayKey } from '@/lib/time';
 import { BREAK_LABELS } from '@/lib/defaults';
 
-export const metadata = { title: 'Desk — Trade Journal' };
+export const metadata = { title: 'Desk — Super-Journal' };
 
 export default async function DeskPage() {
   const scope = await getScope();
@@ -86,7 +87,9 @@ export default async function DeskPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <>
+    <MatrixField />
+    <div className="relative z-10 space-y-5">
       <Card>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
@@ -346,5 +349,6 @@ export default async function DeskPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

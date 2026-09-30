@@ -7,7 +7,7 @@ import { propStatus } from '@/lib/prop';
 import { fmtMoney, fmtPct } from '@/lib/format';
 import { todayKey } from '@/lib/time';
 
-export const metadata = { title: 'Tank — Trade Journal' };
+export const metadata = { title: 'Tank — Super-Journal' };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 

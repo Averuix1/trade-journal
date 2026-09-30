@@ -6,7 +6,7 @@ import { resetAccount } from '@/lib/actions/accounts';
 import { getAccount, getSessionDefs, getSettings } from '@/lib/queries';
 import { todayKey } from '@/lib/time';
 
-export const metadata = { title: 'Edit account — Trade Journal' };
+export const metadata = { title: 'Edit account — Super-Journal' };
 
 export default async function EditAccountPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

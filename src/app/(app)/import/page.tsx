@@ -5,7 +5,7 @@ import { RestoreForm } from '@/components/restore-form';
 import { undoImport } from '@/lib/actions/import';
 import { getImports, getScope, getSettings } from '@/lib/queries';
 
-export const metadata = { title: 'Import — Trade Journal' };
+export const metadata = { title: 'Import — Super-Journal' };
 
 export default async function ImportPage() {
   const scope = await getScope();

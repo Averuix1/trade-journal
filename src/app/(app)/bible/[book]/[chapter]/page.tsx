@@ -10,7 +10,7 @@ type Params = Promise<{ book: string; chapter: string }>;
 export async function generateMetadata({ params }: { params: Params }) {
   const { book, chapter } = await params;
   const view = getChapter(book, Number(chapter));
-  return { title: view ? `${view.name} ${view.chapter} — Bible` : 'Bible — Trade Journal' };
+  return { title: view ? `${view.name} ${view.chapter} — Bible` : 'Bible — Super-Journal' };
 }
 
 export default async function BibleChapterPage({ params }: { params: Params }) {

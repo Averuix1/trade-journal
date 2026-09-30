@@ -34,7 +34,7 @@ import {
 import { fmtHold, fmtMoney, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
 import { minuteOfDay, NY_TZ } from '@/lib/time';
 
-export const metadata = { title: 'Stats — Trade Journal' };
+export const metadata = { title: 'Stats — Super-Journal' };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 

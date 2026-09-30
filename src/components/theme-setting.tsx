@@ -4,19 +4,20 @@ import { useEffect, useState } from 'react';
 import { applyTheme, isThemePref, THEME_KEY, type ThemePref } from '@/lib/theme';
 
 const OPTIONS: { value: ThemePref; label: string; hint: string }[] = [
+  { value: 'matrix', label: 'Matrix', hint: 'Near-black' },
   { value: 'dark', label: 'Dark', hint: 'Charcoal' },
   { value: 'light', label: 'Light', hint: 'Warm paper' },
   { value: 'system', label: 'System', hint: 'Match this device' },
 ];
 
-export function ThemeSetting() {
-  const [pref, setPref] = useState<ThemePref>('dark');
+export function ThemeSetting({ initialPref = 'matrix' }: { initialPref?: ThemePref }) {
+  const [pref, setPref] = useState<ThemePref>(initialPref);
 
   useEffect(() => {
     const read = () => {
-      const fromDom = document.documentElement.getAttribute('data-theme-pref');
       const stored = localStorage.getItem(THEME_KEY);
-      setPref(isThemePref(stored) ? stored : isThemePref(fromDom) ? fromDom : 'dark');
+      const fromDom = document.documentElement.getAttribute('data-theme-pref');
+      setPref(isThemePref(stored) ? stored : isThemePref(fromDom) ? fromDom : 'matrix');
     };
     read();
     window.addEventListener('tj-theme', read);
@@ -47,7 +48,9 @@ export function ThemeSetting() {
           );
         })}
       </div>
-      <p className="mt-3 text-xs text-dim">Saved in this browser. Dark is the default.</p>
+      <p className="mt-3 text-xs text-dim">
+        Saved in this browser. Matrix is the default for a new browser. A choice already saved here stays.
+      </p>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { Card } from '@/components/ui';
 import { getCuratedVerses, listBooks } from '@/lib/bible';
 import { getBookmarks, getReadingState } from '@/lib/bible/store';
 
-export const metadata = { title: 'Bible — Trade Journal' };
+export const metadata = { title: 'Bible — Super-Journal' };
 
 export default async function BiblePage() {
   const [verses, books, state, marks] = await Promise.all([

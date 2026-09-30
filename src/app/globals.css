@@ -5,47 +5,45 @@
 :root {
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
-  /* Neutral charcoal. Channels so Tailwind opacity modifiers keep working. */
-  --ink-950: 17 17 20; /* #111114 page */
-  --ink-900: 22 22 26; /* #16161a cards */
-  --ink-850: 28 28 33; /* #1c1c21 */
-  --ink-800: 36 36 42; /* #24242a */
-  --ink-700: 48 48 56; /* #303038 */
-  --ink-600: 72 72 80; /* #484850 */
-  --ink-500: 120 120 128; /* #787880 */
+  /* Matrix is the unset default. Channels so Tailwind opacity modifiers keep working. */
+  --ink-950: 5 8 6; /* #050806 page */
+  --ink-900: 11 18 13; /* #0B120D cards */
+  --ink-850: 7 11 8; /* #070B08 */
+  --ink-800: 14 26 18;
+  --ink-700: 20 38 26;
+  --ink-600: 42 72 52;
+  --ink-500: 90 122 102;
 
-  /* Hairlines. Close to white at 7–8% on the page. */
-  --line: 46 46 52;
-  --line-soft: 36 36 42;
-  --line-bright: 72 72 80;
+  --line: 20 48 28; /* #14301C */
+  --line-soft: 16 36 22;
+  --line-bright: 36 78 48;
 
-  --fg: 237 237 237; /* #ededed */
-  --fg-strong: 247 247 248;
-  --dim: 155 155 163; /* #9b9ba3 */
+  --fg: 200 230 207; /* #C8E6CF */
+  --fg-strong: 226 242 230;
+  --dim: 111 143 120; /* #6F8F78 */
 
-  /* One restrained accent: off-white. The name stays mint so existing utilities follow it. */
-  --mint-100: 250 250 250;
-  --mint-200: 237 237 237;
-  --mint-300: 210 210 214;
-  --mint-400: 237 237 237;
-  --mint-500: 255 255 255;
-  --mint-600: 168 168 174;
+  /* Terminal green, used sparingly. The name stays mint so existing utilities follow it. */
+  --mint-100: 200 230 207;
+  --mint-200: 168 214 182;
+  --mint-300: 120 186 146;
+  --mint-400: 61 220 132; /* #3DDC84 */
+  --mint-500: 61 220 132;
+  --mint-600: 46 156 98;
 
-  /* Sage, not neon. #4EAA6E text on #16161A is about 6.4:1. */
-  --profit: 78 170 110;
-  --profit-soft: 26 40 32;
-  --profit-text: 78 170 110;
+  --profit: 61 220 132;
+  --profit-soft: 12 36 22;
+  --profit-text: 61 220 132;
 
-  /* Muted coral. #E0A098 on #16161A is about 7:1. */
-  --loss: 184 116 110;
-  --loss-soft: 42 30 30;
-  --loss-text: 224 160 152;
+  /* Muted red. #D9534F on #0B120D is about 4.8:1. */
+  --loss: 217 83 79;
+  --loss-soft: 42 18 18;
+  --loss-text: 217 83 79;
 
-  --warn: 196 168 116;
-  --warn-soft: 42 36 26;
-  --warn-line: 92 78 52;
+  --warn: 196 168 96;
+  --warn-soft: 36 30 16;
+  --warn-line: 92 78 40;
 
-  --on-accent: 17 17 20;
+  --on-accent: 5 8 6;
 }
 
 @layer base {
@@ -206,7 +204,48 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Warm paper. Dark charcoal stays on :root and is unchanged. */
+/* Charcoal. Explicit so a saved Dark choice does not inherit the Matrix default. */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --ink-950: 17 17 20; /* #111114 page */
+  --ink-900: 22 22 26; /* #16161a cards */
+  --ink-850: 28 28 33; /* #1c1c21 */
+  --ink-800: 36 36 42; /* #24242a */
+  --ink-700: 48 48 56; /* #303038 */
+  --ink-600: 72 72 80; /* #484850 */
+  --ink-500: 120 120 128; /* #787880 */
+
+  --line: 46 46 52;
+  --line-soft: 36 36 42;
+  --line-bright: 72 72 80;
+
+  --fg: 237 237 237; /* #ededed */
+  --fg-strong: 247 247 248;
+  --dim: 155 155 163; /* #9b9ba3 */
+
+  --mint-100: 250 250 250;
+  --mint-200: 237 237 237;
+  --mint-300: 210 210 214;
+  --mint-400: 237 237 237;
+  --mint-500: 255 255 255;
+  --mint-600: 168 168 174;
+
+  --profit: 78 170 110;
+  --profit-soft: 26 40 32;
+  --profit-text: 78 170 110;
+
+  --loss: 184 116 110;
+  --loss-soft: 42 30 30;
+  --loss-text: 224 160 152;
+
+  --warn: 196 168 116;
+  --warn-soft: 42 36 26;
+  --warn-line: 92 78 52;
+
+  --on-accent: 17 17 20;
+}
+
+/* Warm paper. */
 [data-theme='light'] {
   color-scheme: light;
   --ink-950: 247 247 245; /* #F7F7F5 page */
@@ -295,4 +334,116 @@
 [data-theme='light'] .bg-loss\/15,
 [data-theme='light'] .bg-loss\/20 {
   background-color: rgb(var(--loss) / 0.1);
+}
+
+/* Matrix chrome: square corners, mono figures, thin green lines. Body copy stays the sans stack. */
+[data-theme='matrix'] h1,
+[data-theme='matrix'] h2,
+[data-theme='matrix'] h3,
+[data-theme='matrix'] .card-title,
+[data-theme='matrix'] .label,
+[data-theme='matrix'] th,
+[data-theme='matrix'] .tabular,
+[data-theme='matrix'] .stat-value,
+[data-theme='matrix'] .wordmark,
+[data-theme='matrix'] .pill {
+  font-family: var(--font-mono, ui-monospace), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+[data-theme='matrix'] .label,
+[data-theme='matrix'] .card-title,
+[data-theme='matrix'] th,
+[data-theme='matrix'] .pill {
+  letter-spacing: 0.08em;
+}
+
+[data-theme='matrix'] .rounded-xl,
+[data-theme='matrix'] .card {
+  border-radius: 4px;
+}
+
+[data-theme='matrix'] .rounded-lg,
+[data-theme='matrix'] .rounded-md,
+[data-theme='matrix'] .rounded-full,
+[data-theme='matrix'] .btn,
+[data-theme='matrix'] .pill,
+[data-theme='matrix'] input,
+[data-theme='matrix'] select,
+[data-theme='matrix'] textarea {
+  border-radius: 3px;
+}
+
+[data-theme='matrix'] .app-header {
+  border-bottom-color: rgb(var(--line));
+}
+
+[data-theme='matrix'] .card {
+  border-color: rgb(var(--line));
+}
+
+[data-theme='matrix'] ::selection {
+  background: rgb(var(--mint-400) / 0.22);
+  color: rgb(var(--fg-strong));
+}
+
+[data-theme='matrix'] input:focus,
+[data-theme='matrix'] select:focus,
+[data-theme='matrix'] textarea:focus {
+  border-color: rgb(var(--mint-400) / 0.65);
+  box-shadow: 0 0 0 1px rgb(var(--mint-400) / 0.28);
+}
+
+[data-theme='matrix'] .chip-on,
+[data-theme='matrix'] .pill-on {
+  background: rgb(var(--mint-400) / 0.12);
+  color: rgb(var(--mint-400));
+  border-color: rgb(var(--mint-400) / 0.4);
+  box-shadow: none;
+}
+
+[data-theme='matrix'] .btn-primary:hover {
+  background: rgb(var(--mint-600));
+  color: rgb(var(--on-accent));
+}
+
+[data-theme='matrix'] .bg-profit\/15,
+[data-theme='matrix'] .bg-profit\/20 {
+  background-color: rgb(var(--profit) / 0.12);
+}
+
+[data-theme='matrix'] .bg-loss\/15,
+[data-theme='matrix'] .bg-loss\/20 {
+  background-color: rgb(var(--loss) / 0.14);
+}
+
+.matrix-field {
+  display: none;
+}
+
+[data-theme='matrix'] .matrix-field {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0 3px, #c8e6cf 3px 4px),
+    repeating-linear-gradient(90deg, transparent 0 18px, #3ddc84 18px 19px, transparent 19px 46px);
+  background-size: 100% 4px, 46px 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme='matrix'] .matrix-field {
+    animation: matrix-drift 22s linear infinite;
+  }
+}
+
+@keyframes matrix-drift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 0 64px, 0 -140px;
+  }
 }

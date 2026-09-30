@@ -20,7 +20,7 @@ import { fmtHold, fmtNum, fmtPct, fmtR, fmtSigned } from '@/lib/format';
 import { formatTime, tradingDay, utcToZonedInput } from '@/lib/time';
 import { BREAK_LABELS } from '@/lib/defaults';
 
-export const metadata = { title: 'Trades — Trade Journal' };
+export const metadata = { title: 'Trades — Super-Journal' };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 

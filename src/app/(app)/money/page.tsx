@@ -7,7 +7,7 @@ import { FEE_KINDS, LEDGER_KINDS } from '@/lib/defaults';
 import { fmtMoney, fmtPct, fmtSigned } from '@/lib/format';
 import { todayKey } from '@/lib/time';
 
-export const metadata = { title: 'Money — Trade Journal' };
+export const metadata = { title: 'Money — Super-Journal' };
 
 export default async function MoneyPage() {
   const scope = await getScope();
